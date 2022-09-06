@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "iostream": "c",
+        "vector": "c",
+        "memory_resource": "c",
+        "string": "c",
+        "deque": "cpp",
+        "stack": "cpp",
+        "map": "cpp",
+        "__bit_reference": "cpp"
+    }
+}
