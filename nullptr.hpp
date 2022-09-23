@@ -3,7 +3,7 @@
 
 namespace ft
 {
-const struct nullptr_t
+struct nullptr_t
 {
 private:
     void operator&(void) const;
@@ -12,7 +12,7 @@ public:
     template<typename T, typename U> operator T U::*() const { return 0; }
 };
 
-static nullptr_t    _nullptr = {};
+static const nullptr_t    _nullptr = {};
 
 }
 

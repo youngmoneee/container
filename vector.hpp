@@ -1,3 +1,4 @@
+#include <iostream>
 #ifndef VECTOR_HPP
 #define VECTOR_HPP
 
@@ -7,6 +8,7 @@
 #include <memory>
 #include <stdexcept>
 #include <algorithm>
+#include <limits>
 
 namespace ft {
 
@@ -26,10 +28,11 @@ public:
 	typedef typename allocator_type::const_pointer				const_pointer;
 
 	//	Iterator
-	typedef random_access_iterator_tag<value_type>				iterator;
-	typedef random_access_iterator_tag<const_value_type>		const_iterator;
-	typedef reverse_iterator<iterator>							reverse_iterator;	
-	typedef reverse_iterator<const_iterator>					const_reverse_iterator;
+	typedef random_access_iterator<value_type>				iterator;
+	typedef random_access_iterator<const_value_type>		const_iterator;
+	
+	typedef reverse_iterator<iterator>						reverse_iterator;	
+	//typedef reverse_iterator<const_iterator>				const_reverse_iterator;
 
 	//	Size
 	typedef typename iterator_traits<iterator>::difference_type	difference_type;
@@ -43,6 +46,9 @@ private:	//	Variable
 
 private:	//	Function
 	void	_init(size_type n) {
+		if (n > max_size())
+			throw std::length_error("Too big");
+
 		_begin_ = _alloc_.allocate(n);
 		_end_ = _begin_;
 		_cap_ = _begin_ + n;
@@ -75,7 +81,7 @@ public:		//	Cannonical
 				const value_type& type = value_type(),
 				const allocator_type& alloc = allocator_type())
 		: _alloc_(alloc) {
-			_init(n)
+			_init(n);
 			_construct(n, type);
 		};
 
@@ -111,6 +117,30 @@ public:		//	Cannonical
 			return *this;
 		assign(v._begin_, v._end_);
 		return *this;
+	}
+
+	//	Size
+	bool empty(void) {			return _begin_ == _end_; }
+	size_type max_size() const {return std::numeric_limits<difference_type>::max() / sizeof(value_type);}
+	size_type size() const {	return std::distance(_begin_, _end_); }
+	size_type capacity(void) {	return static_cast<size_type>(_cap_ - _begin_); }
+
+	void reserve(size_type new_cap) {
+		if (new_cap > max_size())
+			throw std::length_error("Too big");
+		if (new_cap <= size() || new_cap <= capacity())
+			return ;
+		if (new_cap < capacity() * 2)
+			new_cap = capacity() * 2;
+		size_type pre_size = size();
+		size_type pre_cap = capacity();
+		pointer pbegin = _alloc_.allocate(new_cap);
+		std::uninitialized_copy(_begin_, _end_, pbegin);
+		_destruct(_begin_);
+		_alloc_.deallocate(_begin_, pre_cap);
+		_begin_ = pbegin;
+		_end_ = _begin_ + pre_size;
+		_cap_ = _begin_ + pre_cap;
 	}
 };
 
