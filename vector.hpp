@@ -142,6 +142,67 @@ public:		//	Cannonical
 		_end_ = _begin_ + pre_size;
 		_cap_ = _begin_ + pre_cap;
 	}
+
+	template<typename iter>
+	void assign(iter first, iter last, typename enable_if<!is_integral<iter>::value>::value = NULL) {
+		size_type n = std::distance(first, last);
+		if (capacity() < n) reserve(n);
+		std::copy(first, last, _begin_);
+		_end_ = _begin_ + n;
+	}
+
+	void clear(void) {
+		_destruct(_begin_);
+	}
+
+	void swap(vector& v) {
+		std::swap(_begin_, v._begin_);
+		std::swap(_end_, v._end_);
+		std::swap(_cap_, v._cap_);
+		std::swap(_alloc_, v._alloc_);
+	}
+
+	iterator insert(iterator pos, const value_type& value) {
+		difference_type diff = pos - begin();
+		if (_cap_ < size() + 1) reserve(size() + 1);
+		pointer ptr = _begin_ + diff;
+		_construct(1);
+		std::copy_backward(ptr, _end_ - 1, _end_);
+		*ptr = value;
+		return iterator(ptr);
+	}
+
+	void insert(iterator pos, size_type n , const value_type& value) {
+		difference_type diff = pos - begin();
+		if (capacity() < size() + n) reserve(size() + n);
+		pointer ptr = _begin_ + diff;
+		_construct(n);
+		std::copy_backward(ptr, _end_ - n, _end);
+		while (n--) *(ptr + n) = value;
+	}
+
+	template<typename iter>
+	void insert(iterator pos, iter first, iter last, typename enable_if<!is_integral<iter>::value>::value = NULL) {
+		difference_type n = std::distance(first, last);
+		difference_type diff = pos - begin();
+		if (capacity() < size() + n) reserve(size() + n);
+		pointer ptr = _begin_ + diff;
+		_construct(n);
+		std::copy_backward(ptr, _end_ - n, _end_);
+		for (; first != last; first++, ptr++) *ptr = *first;
+	}
+
+	iterator erase(iterator pos) {
+		difference_type diff = pos - begin();
+		pointer ptr = _begin_ + diff;
+		std::copy(ptr + 1, _end_, ptr);	// ptr + 1부터 end까지를 ptr에 입력
+		_destruct(1);
+		return iterator(ptr);
+	}
+
+	iterator erase(iterator first, iterator last) {
+
+	}
 };
 
     
