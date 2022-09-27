@@ -31,6 +31,21 @@ bool lexicographical_compare(Iter1 first1, Iter1 last1, Iter2 first2, Iter2 last
 		else if (cmp(*first1, *first2)) return true;
 	return first2 != last2;
 }
+template<typename T>
+struct less : std::binary_function<T, T, bool>
+{
+	bool operator()(const T& lhs, const T& rhs) {
+		return lhs < rhs;
+	}
+};
+
+template<typename T>
+struct greater : std::binary_function<T, T, bool>
+{
+	bool operator()(const T& lhs, const T& rhs) {
+		return lhs > rhs;
+	}
+};
 
 }
 

@@ -31,7 +31,7 @@ public:
 	typedef random_access_iterator<value_type>				iterator;
 	//typedef random_access_iterator<const value_type>		const_iterator;
 	typedef reverse_iterator<iterator>						reverse_iterator;	
-	//typedef reverse_iterator<const iterator>				const_reverse_iterator;
+	//typedef reverse_iterator<const_iterator>				const_reverse_iterator;
 
 	//	Size
 	typedef typename iterator_traits<iterator>::difference_type	difference_type;

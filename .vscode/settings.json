@@ -8,6 +8,8 @@
         "stack": "cpp",
         "map": "cpp",
         "__bit_reference": "cpp",
-        "cstddef": "cpp"
+        "cstddef": "cpp",
+        "iosfwd": "cpp",
+        "memory": "cpp"
     }
 }

@@ -39,14 +39,16 @@ protected:
 
 private:
 	const container_type get_container(void) const { return con; }
+
+friend bool operator==(const stack& lhs, const stack& rhs) { return lhs.get_container() == rhs.get_container(); }
+friend bool operator!=(const stack& lhs, const stack& rhs) { return lhs.con != rhs.con; }
+friend bool operator<(const stack& lhs, const stack& rhs) { return lhs.con < rhs.con; }
+friend bool operator<=(const stack& lhs, const stack& rhs) { return lhs.con <= rhs.con; }
+friend bool operator>(const stack& lhs, const stack& rhs) { return lhs.con > rhs.con; }
+friend bool operator>=(const stack& lhs, const stack& rhs) { return lhs.con >= rhs.con; }
+
 };
 
-bool operator==(const stack& lhs, const stack& rhs) { return lhs.get_container() == rhs.get_container(); }
-bool operator!=(const stack& lhs, const stack& rhs) { return lhs.con != rhs.con; }
-bool operator<(const stack& lhs, const stack& rhs) { return lhs.con < rhs.con; }
-bool operator<=(const stack& lhs, const stack& rhs) { return lhs.con <= rhs.con; }
-bool operator>(const stack& lhs, const stack& rhs) { return lhs.con > rhs.con; }
-bool operator>=(const stack& lhs, const stack& rhs) { return lhs.con >= rhs.con; }
 }
 
 #endif
