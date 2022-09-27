@@ -7,7 +7,7 @@
 #include "traits.hpp"
 #include <memory>
 #include <stdexcept>
-#include <algorithm>
+#include "algorithm.hpp"
 #include <limits>
 
 namespace ft {
@@ -29,10 +29,9 @@ public:
 
 	//	Iterator
 	typedef random_access_iterator<value_type>				iterator;
-	typedef random_access_iterator<const_value_type>		const_iterator;
-	
+	//typedef random_access_iterator<const value_type>		const_iterator;
 	typedef reverse_iterator<iterator>						reverse_iterator;	
-	//typedef reverse_iterator<const_iterator>				const_reverse_iterator;
+	//typedef reverse_iterator<const iterator>				const_reverse_iterator;
 
 	//	Size
 	typedef typename iterator_traits<iterator>::difference_type	difference_type;
@@ -86,7 +85,7 @@ public:		//	Cannonical
 		};
 
 
-	vector(const vector& v) : _alloc_(v.alloc) {
+	vector(const vector& v) : _alloc_(v._alloc_) {
 		size_type n = v.size();	// size 구현
 		_init(v.capacity());	// capacity 구현
 		_construct(n);
@@ -123,7 +122,7 @@ public:		//	Cannonical
 	bool empty(void) {			return _begin_ == _end_; }
 	size_type max_size() const {return std::numeric_limits<difference_type>::max() / sizeof(value_type);}
 	size_type size() const {	return std::distance(_begin_, _end_); }
-	size_type capacity(void) {	return static_cast<size_type>(_cap_ - _begin_); }
+	size_type capacity(void) const {return static_cast<size_type>(_cap_ - _begin_); }
 
 	void reserve(size_type new_cap) {
 		if (new_cap > max_size())
@@ -177,7 +176,7 @@ public:		//	Cannonical
 		if (capacity() < size() + n) reserve(size() + n);
 		pointer ptr = _begin_ + diff;
 		_construct(n);
-		std::copy_backward(ptr, _end_ - n, _end);
+		std::copy_backward(ptr, _end_ - n, _end_);
 		while (n--) *(ptr + n) = value;
 	}
 
@@ -201,10 +200,84 @@ public:		//	Cannonical
 	}
 
 	iterator erase(iterator first, iterator last) {
+		difference_type n = std::distance(first, last);
+		std::copy(last, end(), first);
+		_destruct(n);
+		return first;
+	}
 
+	allocator_type get_allocator(void) const {
+		return _alloc_;
+	}
+
+	//	Iterator
+	iterator begin(void) {	return iterator(_begin_); }
+	const iterator begin(void) const { return iterator(_begin_); }
+	iterator end(void) { return iterator(_end_); }
+	const iterator end(void) const { return iterator(_end_); }
+	reverse_iterator rbegin(void) { return reverse_iterator(end()); }
+	const reverse_iterator rbegin(void) const { return reverse_iterator(end()); }
+	reverse_iterator rend(void) { return reverse_iterator(begin()); }
+	const reverse_iterator rend(void) const { return reverse_iterator(begin()); }
+
+	//	Elem Access
+	reference front(void) { return *_begin_; }
+	const reference front(void) const { return *_begin_; }
+	reference back(void) { return *(_end_ - 1); }
+	const reference back(void) const { return  *(_end_ - 1); }
+	value_type* data(void) throw() {
+		return reinterpret_cast<value_type*>(_begin_);
+	}
+	const value_type* data(void) const throw() {
+		return reinterpret_cast<const value_type*>(_begin_);
+	}
+
+	reference operator[](size_type n) { return _begin_[n]; }
+	const reference operator[](size_type n) const { return _begin_[n]; }
+	reference at(size_type n) {
+		if (size() < n) throw std::out_of_range("index out of range");
+		return _begin_[n];
+	}
+	const reference  at(size_type n) const {
+		if (size() < n) throw std::out_of_range("index out of range");
+		return _begin_[n];
 	}
 };
 
-    
+template<typename T, typename _Alloc>
+bool operator==(const vector<T, _Alloc>& lhs, const vector<T, _Alloc>& rhs) {
+	return lhs.size() == rhs.size() && equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+template<typename T, typename _Alloc>
+bool operator!=(const vector<T, _Alloc>& lhs, const vector<T, _Alloc>& rhs) {
+	return !(lhs == rhs);
+}
+
+template<typename T, typename _Alloc>
+bool operator<(const vector<T, _Alloc>& lhs, const vector<T, _Alloc>& rhs) {
+	return lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+}
+
+template<typename T, typename _Alloc>
+bool operator<=(const vector<T, _Alloc>& lhs, const vector<T, _Alloc>& rhs) {
+	return lhs == rhs || lhs < rhs;
+}
+
+template<typename T, typename _Alloc>
+bool operator>(const vector<T, _Alloc>& lhs, const vector<T, _Alloc>& rhs) {
+	return !(lhs <= rhs);
+}
+
+template<typename T, typename _Alloc>
+bool operator>=(const vector<T, _Alloc>& lhs, const vector<T, _Alloc>& rhs) {
+	return !(lhs < rhs);
+}
+
+template<typename T, typename _Alloc>
+void swap(vector<T, _Alloc>& lhs, vector<T, _Alloc>& rhs) {
+	return lhs.swap(rhs);
+}
+
 }
 #endif

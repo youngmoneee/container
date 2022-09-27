@@ -1,5 +1,5 @@
 #include <iostream>
-#include "pair.hpp"
+#include "../pair.hpp"
 
 int main() {
 	

@@ -64,7 +64,7 @@ struct	iterator_traits< const T* >
 
 //	Random Iterator
 template <typename T>
-class random_access_iterator : public std::iterator<random_access_iterator_tag, T> {
+class random_access_iterator : public iterator<random_access_iterator_tag, T> {
 public:
 	typedef T*	iterator_type;
 	typedef typename iterator_traits<iterator_type>::value_type			value_type;
@@ -139,7 +139,7 @@ public iterator<typename iterator_traits<Iterator>::iterator_category,
 				typename iterator_traits<Iterator>::reference>
 {
 protected:
-	Iterator	current;
+	Iterator	cur;
 public:
 	typedef Iterator											iterator_type;
 	typedef typename iterator_traits<Iterator>::difference_type	difference_type;
@@ -147,59 +147,62 @@ public:
 	typedef typename iterator_traits<Iterator>::reference		reference;
 
 public:
-	reverse_iterator(){};
-	explicit reverse_iterator(Iterator iter) : current(iter) {};
+	reverse_iterator(void) : cur(iterator_type()){};
+	explicit reverse_iterator(iterator_type iter) : cur(iter) {};
 	template<typename U>
-	reverse_iterator(const reverse_iterator<U>& rhs) : current(rhs.base()) {};
+	reverse_iterator(const reverse_iterator<U>& rhs) : cur(rhs.base()) {};
 	virtual ~reverse_iterator() {};
 
-	Iterator base() const { return current; };
+	Iterator base() const { return cur; };
 
 	template<typename U>
 	reverse_iterator& operator=(const reverse_iterator<U>& rhs) {
-		current = rhs.base();
+		if (this == &rhs) return *this;
+		cur = rhs.base();
 		return *this;
 	}
-	reference operator*() const {
-		iterator_type	tmp = current;
-		return *--tmp;
-	}
-	pointer operator->() const {
-		return &(operator*());
-	}
+
 	reverse_iterator operator+(difference_type n) const {
-		return reverse_iterator(current - n);
+		return reverse_iterator(cur - n);
 	}
 	reverse_iterator operator-(difference_type n) const {
-		return reverse_iterator(current + n);
+		return reverse_iterator(cur + n);
 	}
 	reverse_iterator& operator++() {
-		--current;
+		--cur;
 		return *this;
 	}
 	reverse_iterator operator++(int) {
 		reverse_iterator tmp = *this;
-		--current;
+		--cur;
 		return *this;
 	}
 	reverse_iterator& operator--() {
-		++current;
+		++cur;
 		return *this;
 	}
 	reverse_iterator operator--(int) {
 		reverse_iterator tmp = *this;
-		++current;
+		++cur;
 		return *this;
 	}
 	reverse_iterator& operator+=(difference_type n) {
-		current -= n;
+		cur -= n;
 		return *this;
 	}
 	reverse_iterator& operator-=(difference_type n) {
-		current += n;
+		cur += n;
 		return *this;
 	}
-	reference operator[](difference_type n) const { return current[-n - 1]; };
+
+	//	Access
+	reference operator*() const {
+		iterator_type	tmp = cur;
+		return *--tmp;
+	}
+
+	pointer operator->(void) const { return &(operator*()); }
+	reference operator[](difference_type n) const { return *(*this + n); };
 	
 };
 
