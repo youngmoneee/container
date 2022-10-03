@@ -2,6 +2,7 @@
 #define ITERATOR_HPP
 
 #include <cstddef>
+#include "nullptr.hpp"
 
 namespace ft
 {
@@ -126,7 +127,7 @@ public:
 	}
 
 private:
-	pointer	cur;
+	iterator_type	cur;
 };
 
 //	Reverse Iterator
@@ -204,6 +205,44 @@ public:
 	pointer operator->(void) const { return &(operator*()); }
 	reference operator[](difference_type n) const { return *(*this + n); };
 	
+};
+
+template<typename T, typename U>
+class tree_iterator : public iterator<bidirectional_iterator_tag, T>
+{
+public:
+	typedef T			value_type;
+	typedef value_type*	pointer;
+	typedef	value_type&	reference;
+	typedef U*			iterator_type;
+
+	typedef typename iterator_traits<iterator_type>::value_type			node_type;
+	typedef typename iterator_traits<iterator_type>::pointer			node_pointer;
+	typedef typename iterator_traits<iterator_type>::reference			node_reference;
+	typedef typename iterator_traits<iterator_type>::difference_type	difference_type;
+	typedef typename iterator_traits<iterator_type>::iterator_category	iterator_category;
+
+	tree_iterator(void) : cur(_nullptr) {};
+	tree_iterator(node_pointer cur) : cur(cur) {};
+	tree_iterator(const tree_iterator& ref) : cur(ref.base()) {};
+	~tree_iterator(void) {};
+
+	tree_iterator& operator=(const tree_iterator& rhs) {
+		if (this == &rhs) return *this;
+		this.cur = rhs.base();
+		return *this;
+	}
+
+	node_pointer	base(void) const { return cur; }
+	pointer			operator->(void) const { return &cur->value; }
+	reference		operator*(void) const { return cur->value; }
+
+	tree_iterator&	operator++(void) {
+		cur = cur.
+	}
+
+protected:
+	node_pointer		cur;
 };
 
 	//	Random Access relational

@@ -16,6 +16,9 @@ bool equal(Iter1 first1, Iter1 last1, Iter2 first2, BinFunc pred) {
 	return true;
 }
 
+template<typename T, typename U, typename Comp>
+bool is_equal(const T& t, const U& u, Comp comp) const { return !(comp(t, u) || comp(u, t)); }
+
 template<typename Iter1, typename Iter2>
 bool lexicographical_compare(Iter1 first1, Iter1 last1, Iter2 first2, Iter2 last2) {
 	for (; first1 != last1; first1++, first2++)
