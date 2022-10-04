@@ -47,6 +47,12 @@ struct greater : std::binary_function<T, T, bool>
 	}
 };
 
+template<typename T>
+void	swap(T& lhs, T& rhs) {
+	T	C = lhs;
+	lhs = rhs;
+	rhs = C;
+}
 }
 
 #endif

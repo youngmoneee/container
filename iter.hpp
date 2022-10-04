@@ -131,24 +131,19 @@ private:
 
 //	Reverse Iterator
 template <typename Iterator>
-class reverse_iterator :
-public iterator<typename iterator_traits<Iterator>::iterator_category,
-				typename iterator_traits<Iterator>::value_type,
-				typename iterator_traits<Iterator>::difference_type,
-				typename iterator_traits<Iterator>::pointer,
-				typename iterator_traits<Iterator>::reference>
+class reverse_iterator
 {
-protected:
-	Iterator	cur;
-public:
-	typedef Iterator											iterator_type;
-	typedef typename iterator_traits<Iterator>::difference_type	difference_type;
-	typedef typename iterator_traits<Iterator>::pointer			pointer;
-	typedef typename iterator_traits<Iterator>::reference		reference;
 
 public:
+	typedef Iterator													iterator_type;
+	typedef typename iterator_traits<iterator_type>::iterator_category	iterator_category;
+	typedef typename iterator_traits<iterator_type>::value_type			value_type;
+	typedef typename iterator_traits<iterator_type>::difference_type	difference_type;
+	typedef typename iterator_traits<iterator_type>::pointer			pointer;
+	typedef typename iterator_traits<iterator_type>::reference			reference;
+public:
 	reverse_iterator(void) : cur(iterator_type()){};
-	explicit reverse_iterator(iterator_type iter) : cur(iter) {};
+	explicit reverse_iterator(iterator_type iter) : cur(iter.base()) {};
 	template<typename U>
 	reverse_iterator(const reverse_iterator<U>& rhs) : cur(rhs.base()) {};
 	virtual ~reverse_iterator() {};
@@ -196,14 +191,14 @@ public:
 	}
 
 	//	Access
-	reference operator*() const {
+	reference operator*(void) const {
 		iterator_type	tmp = cur;
 		return *--tmp;
 	}
-
 	pointer operator->(void) const { return &(operator*()); }
 	reference operator[](difference_type n) const { return *(*this + n); };
-	
+	protected:
+	iterator_type	cur;
 };
 
 	//	Random Access relational

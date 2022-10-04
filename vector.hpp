@@ -29,9 +29,9 @@ public:
 
 	//	Iterator
 	typedef random_access_iterator<value_type>				iterator;
-	//typedef random_access_iterator<const value_type>		const_iterator;
+	typedef random_access_iterator<const_value_type>		const_iterator;
 	typedef reverse_iterator<iterator>						reverse_iterator;	
-	//typedef reverse_iterator<const_iterator>				const_reverse_iterator;
+	typedef reverse_iterator<const_iterator>				const_reverse_iterator;
 
 	//	Size
 	typedef typename iterator_traits<iterator>::difference_type	difference_type;
@@ -155,10 +155,10 @@ public:		//	Cannonical
 	}
 
 	void swap(vector& v) {
-		std::swap(_begin_, v._begin_);
-		std::swap(_end_, v._end_);
-		std::swap(_cap_, v._cap_);
-		std::swap(_alloc_, v._alloc_);
+		ft::swap(_begin_, v._begin_);
+		ft::swap(_end_, v._end_);
+		ft::swap(_cap_, v._cap_);
+		ft::swap(_alloc_, v._alloc_);
 	}
 
 	iterator insert(iterator pos, const value_type& value) {
@@ -241,6 +241,15 @@ public:		//	Cannonical
 	const reference  at(size_type n) const {
 		if (size() < n) throw std::out_of_range("index out of range");
 		return _begin_[n];
+	}
+	void push_back(const T& value) {
+		if (size() + 1 > capacity())
+			reserve(size() + 1);
+		_construct(1);
+		*(_end_ - 1) = value;
+	}
+	void pop_back(void) {
+		_destruct(1);
 	}
 };
 
