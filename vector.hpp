@@ -34,7 +34,7 @@ public:
 
 	//	Size
 	typedef typename std::ptrdiff_t								difference_type;
-	typedef typename allocator_type::size_type					size_type;
+	typedef typename std::size_t								size_type;
 	
 	//	Iterator
 	typedef random_access_iterator<value_type>					iterator;
@@ -103,7 +103,7 @@ public:		//	Cannonical
 		const allocator_type& alloc = allocator_type(),
 		typename enable_if<!is_integral<InputIterator>::value>::type* = _nullptr)
 		: _alloc_(alloc) {
-			size_type n = std::distance(first, last);
+			difference_type n = std::distance(first, last);
 			_init(n);
 			_construct(n);
 			std::copy(first, last, _begin_);
@@ -125,7 +125,7 @@ public:		//	Cannonical
 
 	//	Size
 	bool empty(void) {			return _begin_ == _end_; }
-	size_type max_size() const {return std::numeric_limits<difference_type>::max() / sizeof(value_type);}
+	size_type max_size() const { return _alloc_.max_size(); }
 	size_type size() const {	return std::distance(_begin_, _end_); }
 	size_type capacity(void) const {return static_cast<size_type>(_cap_ - _begin_); }
 
@@ -157,10 +157,14 @@ public:		//	Cannonical
 
 	template<typename Iter>
 	void assign(Iter first, Iter last, typename enable_if<!ft::is_integral<Iter>::value>::type* = NULL) {
-		size_type n = std::max(&*first, &*last) - std::min(&*first, &*last);//std::distance(first, last);
+		/*
+		size_type n = std::distance(first, last);
 		if (capacity() < n) reserve(n);
-		std::copy(first, last, _begin_);
+		std::copy(first, lasst, _begin_);
 		_end_ = _begin_ + n;
+		*/
+		//vector tmp(first, last);
+		*this->swap(vector(first, last));
 	}
 	void clear(void) {
 		_destruct(_begin_);
