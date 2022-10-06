@@ -6,8 +6,10 @@
 #include "traits.hpp"
 #include <memory>
 #include <stdexcept>
-#include "algorithm.hpp"
 #include <limits>
+#include <iterator>
+#include "algorithm.hpp"
+
 
 namespace ft {
 
@@ -143,9 +145,17 @@ public:		//	Cannonical
 		_cap_ = _begin_ + pre_cap;
 	}
 
-	template<typename iter>
-	void assign(iter first, iter last, typename enable_if<!is_integral<iter>::value>::value = NULL) {
-		size_type n = std::distance(first, last);
+
+	void assign( size_type count, const T& value )
+	{
+		if (capacity() < count)
+			reserve(count);
+		_construct(count, value);
+	}
+
+	template<typename Iter>
+	void assign(Iter first, Iter last, typename enable_if<!ft::is_integral<Iter>::value>::type* = NULL) {
+		difference_type n = std::distance(first, last);
 		if (capacity() < n) reserve(n);
 		std::copy(first, last, _begin_);
 		_end_ = _begin_ + n;
@@ -182,7 +192,7 @@ public:		//	Cannonical
 	}
 
 	template<typename iter>
-	void insert(iterator pos, iter first, iter last, typename enable_if<!is_integral<iter>::value>::value = NULL) {
+	void insert(iterator pos, iter first, iter last, typename enable_if<!is_integral<iter>::value>::type* = _nullptr) {
 		difference_type n = std::distance(first, last);
 		difference_type diff = pos - begin();
 		if (capacity() < size() + n) reserve(size() + n);
