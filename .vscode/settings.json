@@ -10,6 +10,11 @@
         "__bit_reference": "cpp",
         "cstddef": "cpp",
         "iosfwd": "cpp",
-        "memory": "cpp"
+        "memory": "cpp",
+        "array": "cpp",
+        "iterator": "cpp",
+        "list": "cpp",
+        "set": "cpp",
+        "string_view": "cpp"
     }
 }

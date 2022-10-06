@@ -1,8 +1,9 @@
-#ifndef ITERATOR_HPP
-#define ITERATOR_HPP
+#ifndef ITER_HPP
+# define ITER_HPP
 
 #include <cstddef>
 #include "nullptr.hpp"
+#include "traits.hpp"
 
 namespace ft
 {
@@ -48,7 +49,7 @@ struct	iterator_traits< T* >
 {
 	typedef	random_access_iterator_tag				iterator_category;
 	typedef	T										value_type;
-	typedef	ptrdiff_t								difference_type;
+	typedef	std::ptrdiff_t								difference_type;
 	typedef	T*										pointer;
 	typedef	T&										reference;
 };
@@ -58,14 +59,16 @@ struct	iterator_traits< const T* >
 {
 	typedef	random_access_iterator_tag				iterator_category;
 	typedef	T										value_type;
-	typedef	ptrdiff_t								difference_type;
+	typedef	std::ptrdiff_t							difference_type;
 	typedef	const T*								pointer;
 	typedef	const T&								reference;
 };
 
 //	Random Iterator
 template <typename T>
-class random_access_iterator : public iterator<random_access_iterator_tag, T> {
+class random_access_iterator
+: public iterator<random_access_iterator_tag, T>
+{
 public:
 	typedef T*	iterator_type;
 	typedef typename iterator_traits<iterator_type>::value_type			value_type;
@@ -127,29 +130,29 @@ public:
 	}
 
 private:
-	iterator_type	cur;
+	pointer	cur;
 };
 
 //	Reverse Iterator
 template <typename Iterator>
 class reverse_iterator
 {
-
 public:
 	typedef Iterator													iterator_type;
-	typedef typename iterator_traits<iterator_type>::iterator_category	iterator_category;
-	typedef typename iterator_traits<iterator_type>::value_type			value_type;
 	typedef typename iterator_traits<iterator_type>::difference_type	difference_type;
+	typedef typename iterator_traits<iterator_type>::value_type			value_type;
 	typedef typename iterator_traits<iterator_type>::pointer			pointer;
 	typedef typename iterator_traits<iterator_type>::reference			reference;
+	typedef typename iterator_traits<iterator_type>::iterator_category	iterator_category;
+
 public:
 	reverse_iterator(void) : cur(iterator_type()){};
-	explicit reverse_iterator(iterator_type iter) : cur(iter.base()) {};
+	explicit reverse_iterator(iterator_type iter) : cur(iter) {};
 	template<typename U>
 	reverse_iterator(const reverse_iterator<U>& rhs) : cur(rhs.base()) {};
 	virtual ~reverse_iterator() {};
 
-	Iterator base() const { return cur; };
+	iterator_type base() const { return cur; };
 
 	template<typename U>
 	reverse_iterator& operator=(const reverse_iterator<U>& rhs) {
@@ -164,7 +167,7 @@ public:
 	reverse_iterator operator-(difference_type n) const {
 		return reverse_iterator(cur + n);
 	}
-	reverse_iterator& operator++() {
+	reverse_iterator& operator++(void) {
 		--cur;
 		return *this;
 	}
@@ -173,7 +176,7 @@ public:
 		--cur;
 		return *this;
 	}
-	reverse_iterator& operator--() {
+	reverse_iterator& operator--(void) {
 		++cur;
 		return *this;
 	}
@@ -196,12 +199,13 @@ public:
 		iterator_type	tmp = cur;
 		return *--tmp;
 	}
-	pointer operator->(void) const { return &(operator*()); }
+	pointer operator->(void) const { return &operator*(); }
 	reference operator[](difference_type n) const { return *(*this + n); };
-	protected:
+	
+	private:
 	iterator_type	cur;
 };
-
+/*
 template<typename T, typename U>
 class tree_iterator : public iterator<bidirectional_iterator_tag, T>
 {
@@ -239,7 +243,7 @@ public:
 protected:
 	node_pointer		cur;
 };
-
+*/
 	//	Random Access relational
 	template <typename T, typename U>
 	bool operator==(const random_access_iterator<T>& lhs, const random_access_iterator<U>& rhs) {

@@ -1,6 +1,5 @@
-#include <iostream>
 #ifndef VECTOR_HPP
-#define VECTOR_HPP
+# define VECTOR_HPP
 
 #include "iter.hpp"
 #include "nullptr.hpp"
@@ -18,25 +17,27 @@ class vector
 public:
 	//	Type
     typedef T													value_type;
-    typedef const T												const_value_type;
 	
 	//	Allocator
     typedef _Alloc												allocator_type;
-    typedef typename allocator_type::reference					reference;
-	typedef typename allocator_type::const_reference			const_reference;
-	typedef typename allocator_type::pointer					pointer;
-	typedef typename allocator_type::const_pointer				const_pointer;
+	typedef typename allocator_type::template rebind<value_type>::other		type_allocator;
 
-	//	Iterator
-	typedef random_access_iterator<value_type>				iterator;
-	typedef random_access_iterator<const_value_type>		const_iterator;
-	typedef reverse_iterator<iterator>						reverse_iterator;	
-	typedef reverse_iterator<const_iterator>				const_reverse_iterator;
+	typedef std::allocator_traits<type_allocator>				type_traits;
+	typedef typename type_traits::pointer						pointer;
+	typedef typename type_traits::const_pointer					const_pointer;
+    typedef value_type&											reference;
+	typedef const value_type&									const_reference;
 
 	//	Size
-	typedef typename iterator_traits<iterator>::difference_type	difference_type;
+	typedef typename std::ptrdiff_t								difference_type;
 	typedef typename allocator_type::size_type					size_type;
 	
+	//	Iterator
+	typedef random_access_iterator<value_type>					iterator;
+	typedef random_access_iterator<const value_type>			const_iterator;
+	typedef ft::reverse_iterator<iterator>							reverse_iterator;	
+	typedef ft::reverse_iterator<const_iterator>					const_reverse_iterator;
+
 private:	//	Variable
 	allocator_type	_alloc_;
 	pointer			_begin_;
@@ -222,9 +223,9 @@ public:		//	Cannonical
 
 	//	Elem Access
 	reference front(void) { return *_begin_; }
-	const reference front(void) const { return *_begin_; }
+	const_reference front(void) const { return *_begin_; }
 	reference back(void) { return *(_end_ - 1); }
-	const reference back(void) const { return  *(_end_ - 1); }
+	const_reference back(void) const { return  *(_end_ - 1); }
 	value_type* data(void) throw() {
 		return reinterpret_cast<value_type*>(_begin_);
 	}
@@ -233,12 +234,12 @@ public:		//	Cannonical
 	}
 
 	reference operator[](size_type n) { return _begin_[n]; }
-	const reference operator[](size_type n) const { return _begin_[n]; }
+	const_reference operator[](size_type n) const { return _begin_[n]; }
 	reference at(size_type n) {
 		if (size() < n) throw std::out_of_range("index out of range");
 		return _begin_[n];
 	}
-	const reference  at(size_type n) const {
+	const_reference  at(size_type n) const {
 		if (size() < n) throw std::out_of_range("index out of range");
 		return _begin_[n];
 	}
@@ -288,5 +289,5 @@ void swap(vector<T, _Alloc>& lhs, vector<T, _Alloc>& rhs) {
 	return lhs.swap(rhs);
 }
 
-}
+}	// FT
 #endif
