@@ -76,8 +76,8 @@ public:
 	typedef typename iterator_traits<iterator_type>::pointer			pointer;
 	typedef typename iterator_traits<iterator_type>::reference			reference;
 
-	random_access_iterator(void) : cur(NULL) {};
-	random_access_iterator(T* ptr) : cur(ptr) {};
+	random_access_iterator(pointer ptr = NULL) : cur(ptr) {};
+	//random_access_iterator(T* ptr) : cur(ptr) {};
 	template<typename U>
 	random_access_iterator(const random_access_iterator<U>& ref) : cur(ref.base()) {};
 	~random_access_iterator(void) {};

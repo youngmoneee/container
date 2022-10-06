@@ -10,6 +10,8 @@
 #include <iterator>
 #include "algorithm.hpp"
 
+#include <algorithm>
+
 
 namespace ft {
 
@@ -155,12 +157,11 @@ public:		//	Cannonical
 
 	template<typename Iter>
 	void assign(Iter first, Iter last, typename enable_if<!ft::is_integral<Iter>::value>::type* = NULL) {
-		difference_type n = std::distance(first, last);
+		size_type n = std::max(&*first, &*last) - std::min(&*first, &*last);//std::distance(first, last);
 		if (capacity() < n) reserve(n);
 		std::copy(first, last, _begin_);
 		_end_ = _begin_ + n;
 	}
-
 	void clear(void) {
 		_destruct(_begin_);
 	}
