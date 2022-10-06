@@ -1,6 +1,8 @@
 #ifndef TRAITS_HPP
 # define TRAITS_HPP
 
+#include "iter.hpp"
+
 namespace ft
 {
 
@@ -67,6 +69,8 @@ struct	enable_if {};
 
 template <typename T>
 struct	enable_if<true, T> { typedef T	type; };
+
+
 
 }		//	FT
 #endif  //  TRAITS_HPP

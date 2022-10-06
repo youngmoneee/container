@@ -57,18 +57,6 @@ void	swap(T& lhs, T& rhs) {
 	rhs = C;
 }
 
-template < class InputIterator >
-typename ft::iterator_traits< InputIterator >::difference_type difference(
-    InputIterator first, InputIterator last) {
-  typedef
-      typename ft::iterator_traits< InputIterator >::difference_type size_type;
-  size_type n = 0;
-  for (; first != last; ++first) {
-    ++n;
-  }
-  return n;
-}
-
 }
 
 #endif

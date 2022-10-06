@@ -2,14 +2,15 @@
 # define VECTOR_HPP
 
 #include "iter.hpp"
-#include "nullptr.hpp"
+#include "iterator.hpp"
+#include "helper.hpp"
 #include "traits.hpp"
 #include <memory>
 #include <stdexcept>
 #include <limits>
-#include <iterator>
+//#include <iterator>
 #include "algorithm.hpp"
-
+#include <typeinfo>
 #include <algorithm>
 
 
@@ -21,6 +22,7 @@ class vector
 public:
 	//	Type
     typedef T													value_type;
+	typedef const T												const_value_type;
 	
 	//	Allocator
     typedef _Alloc												allocator_type;
@@ -38,7 +40,7 @@ public:
 	
 	//	Iterator
 	typedef random_access_iterator<value_type>					iterator;
-	typedef random_access_iterator<const value_type>			const_iterator;
+	typedef random_access_iterator<const_value_type>			const_iterator;
 	typedef ft::reverse_iterator<iterator>							reverse_iterator;	
 	typedef ft::reverse_iterator<const_iterator>					const_reverse_iterator;
 
@@ -50,8 +52,7 @@ private:	//	Variable
 
 private:	//	Function
 	void	_init(size_type n) {
-		if (n > max_size())
-			throw std::length_error("Too big");
+		if (n > max_size()) throw std::length_error("Too big");
 
 		_begin_ = _alloc_.allocate(n);
 		_end_ = _begin_;
@@ -59,17 +60,17 @@ private:	//	Function
 	}
 
 	void	_construct(size_type n) {
-		while (n--) _alloc_.construct(_end_++);
+		for (; n; ++_end_, --n) _alloc_.construct(_end_);
 	}
 	void	_construct(size_type n, T v) {
-		while (n--) _alloc_.construct(_end_++, v);
+		for (; n; ++_end_, --n) _alloc_.construct(_end_, v);
 	}
 
 	void	_destruct(size_type n) {
-		while (n-- && _end_) _alloc_.destroy(--_end_);
+		for (; n && _end_; --_end_, --n) _alloc_.destroy(_end_);
 	}
 	void	_destruct(pointer until) {
-		while (_end_ != until && _end_) _alloc_.destroy(--_end_);
+		for (; _end_ != until && _end_; --_end_) _alloc_.destroy(_end_);
 	}
 
 
@@ -101,9 +102,9 @@ public:		//	Cannonical
 	vector(InputIterator first,
 		InputIterator last,
 		const allocator_type& alloc = allocator_type(),
-		typename enable_if<!is_integral<InputIterator>::value>::type* = _nullptr)
+		typename enable_if<!ft::is_integral<InputIterator>::value>::type* = ft::_nullptr)
 		: _alloc_(alloc) {
-			difference_type n = std::distance(first, last);
+			difference_type n = ft::difference(random_access_iterator<InputIterator>(first), random_access_iterator<InputIterator>(last));
 			_init(n);
 			_construct(n);
 			std::copy(first, last, _begin_);
@@ -124,48 +125,58 @@ public:		//	Cannonical
 	}
 
 	//	Size
-	bool empty(void) {			return _begin_ == _end_; }
-	size_type max_size() const { return _alloc_.max_size(); }
-	size_type size() const {	return std::distance(_begin_, _end_); }
-	size_type capacity(void) const {return static_cast<size_type>(_cap_ - _begin_); }
+	bool empty(void) const {			return begin() == end(); }
+	size_type max_size(void) const {return _alloc_.max_size(); }
+	size_type size(void) const {	return _end_ - _begin_; }
+	size_type capacity(void) const {return _cap_ - _begin_; }
 
 	void reserve(size_type new_cap) {
-		if (new_cap > max_size())
-			throw std::length_error("Too big");
-		if (new_cap <= size() || new_cap <= capacity())
-			return ;
-		if (new_cap < capacity() * 2)
-			new_cap = capacity() * 2;
-		size_type pre_size = size();
-		size_type pre_cap = capacity();
-		pointer pbegin = _alloc_.allocate(new_cap);
-		std::uninitialized_copy(_begin_, _end_, pbegin);
-		_destruct(_begin_);
-		_alloc_.deallocate(_begin_, pre_cap);
-		_begin_ = pbegin;
-		_end_ = _begin_ + pre_size;
-		_cap_ = _begin_ + pre_cap;
+		if (new_cap > max_size()) throw std::out_of_range("Too much allocation");
+		if (new_cap <= capacity()) return ;
+		if (new_cap < capacity() * 2) new_cap <<= 2;
+
+		pointer prebegin = _begin_;
+		pointer preend = _end_;
+		size_type precap = capacity();
+
+		_begin_ = _alloc_.allocate(new_cap);
+		_end_ = _begin_;
+		_cap_ = _begin_ + new_cap;
+
+	
+		for (pointer cur = prebegin; cur != preend; ++cur)
+			_construct(1, *cur);
+		for (pointer cur = preend; cur != prebegin; )
+			_alloc_.destroy(--cur);
+		_alloc_.deallocate(prebegin, precap);
 	}
 
+	void resize(size_type n, value_type value = value_type()) {
+		if (n > max_size()) throw std::length_error("Too much allocation");
+		if (size() > n) {
+			_destruct(size() - n);
+      		return;
+    	}
+    	//this->insert(end(), n - size(), value);
+		_construct(n - size(), value);
+	}
 
 	void assign( size_type count, const T& value )
 	{
+		clear();
 		if (capacity() < count)
 			reserve(count);
 		_construct(count, value);
 	}
 
 	template<typename Iter>
-	void assign(Iter first, Iter last, typename enable_if<!ft::is_integral<Iter>::value>::type* = NULL) {
-		/*
-		size_type n = std::distance(first, last);
+	void assign(Iter first, Iter last, typename ft::enable_if<!ft::is_integral<Iter>::value>::type* = NULL) {
+    	size_type n = ft::difference(first, last);
+		clear();
 		if (capacity() < n) reserve(n);
-		std::copy(first, lasst, _begin_);
-		_end_ = _begin_ + n;
-		*/
-		//vector tmp(first, last);
-		*this->swap(vector(first, last));
+		for ( ; &*first != &*last; ++first) push_back(*first);
 	}
+
 	void clear(void) {
 		_destruct(_begin_);
 	}
@@ -178,33 +189,89 @@ public:		//	Cannonical
 	}
 
 	iterator insert(iterator pos, const value_type& value) {
-		difference_type diff = pos - begin();
-		if (_cap_ < size() + 1) reserve(size() + 1);
-		pointer ptr = _begin_ + diff;
-		_construct(1);
-		std::copy_backward(ptr, _end_ - 1, _end_);
-		*ptr = value;
-		return iterator(ptr);
+		size_type idx = &*pos - _begin_;
+
+		insert(pos, 1, value);		
+		return _begin_ + idx;
 	}
 
 	void insert(iterator pos, size_type n , const value_type& value) {
-		difference_type diff = pos - begin();
-		if (capacity() < size() + n) reserve(size() + n);
-		pointer ptr = _begin_ + diff;
-		_construct(n);
-		std::copy_backward(ptr, _end_ - n, _end_);
-		while (n--) *(ptr + n) = value;
+		size_type idx = &*pos - _begin_;
+		
+		if (capacity() - size() >= n) {
+			for (size_type i = 0; i < size() - idx; ++i) {
+				_alloc_.construct(_end_ + n - i, *(_end_ - i));
+				_alloc_.destroy(_end_ - i);
+			}
+			_end_ = _begin_ + size() + n;
+			for (size_type i = 0; i < n; ++i)
+				_alloc_.construct(_begin_ + idx + i, value);
+			return ;
+		}
+
+		pointer pbegin = _begin_;
+		pointer pend = _end_;
+		size_type psz = size();
+		size_type pcap = capacity();
+
+		_begin_ = _alloc_.allocate(psz + n);
+		_end_ = _begin_ + psz + n;
+		_cap_ = _end_;
+
+		for (size_type i = 0; i < idx; ++i) {
+			_alloc_.construct(_begin_ + i, *(pbegin + i));
+			_alloc_.destroy(pbegin + i);
+		}
+
+		for (size_type i = 0; i < psz - idx; ++i) {
+			_alloc_.construct(_end_ - i - 1, *(pend - i - 1));
+			_alloc_.destroy(pend - i - 1);
+		}
+
+		for (size_type i = 0; i < n; ++i)
+			_alloc_.construct(_begin_ + idx + i, value);
+
+		_alloc_.deallocate(pbegin, pcap);
 	}
 
-	template<typename iter>
-	void insert(iterator pos, iter first, iter last, typename enable_if<!is_integral<iter>::value>::type* = _nullptr) {
-		difference_type n = std::distance(first, last);
-		difference_type diff = pos - begin();
-		if (capacity() < size() + n) reserve(size() + n);
-		pointer ptr = _begin_ + diff;
-		_construct(n);
-		std::copy_backward(ptr, _end_ - n, _end_);
-		for (; first != last; first++, ptr++) *ptr = *first;
+	template<typename Iter>
+	void insert(iterator pos, Iter first, Iter last, typename enable_if<!is_integral<Iter>::value>::type* = NULL) {
+		size_type idx = &*pos - _begin_;
+		size_type n = &*last - &*first;
+
+		if (capacity() >= size() + n) {
+			for (size_type i = 0; i < size() - idx; ++i) {
+				_alloc_.construct(_end_ + n - i, *(_end_ - i));
+				_alloc_.destroy(_end_ - i);
+			}
+			_end_ = _begin_ + size() + n;
+			for (size_type i = 0; i < n; ++i, ++first)
+				_alloc_.construct(_begin_ + idx + i, *first);
+			return ;
+		}
+
+		pointer pbegin = _begin_;
+		pointer pend = _end_;
+		size_type psz = size();
+		size_type pcap = capacity();
+
+		_begin_ = _alloc_.allocate(psz + n);
+		_end_ = _begin_ + psz + n;
+		_cap_ = _end_;
+
+		for (size_type i = 0; i < idx; ++i) {
+			_alloc_.construct(_begin_ + i, *(pbegin + i));
+			_alloc_.destroy(pbegin + i);
+		}
+
+		for (size_type i = 0; i < psz - idx; ++i) {
+			_alloc_.construct(_end_ - i - 1, *(pend - i - 1));
+			_alloc_.destroy(pend - i - 1);
+		}
+
+		for (size_type i = 0; i < n; ++i, ++first)
+			_alloc_.construct(_begin_ + idx + i, *first);
+		_alloc_.deallocate(pbegin, pcap);
 	}
 
 	iterator erase(iterator pos) {
@@ -261,8 +328,8 @@ public:		//	Cannonical
 	void push_back(const T& value) {
 		if (size() + 1 > capacity())
 			reserve(size() + 1);
-		_construct(1);
-		*(_end_ - 1) = value;
+		_construct(1, value);
+		//*(_end_ - 1) = value;
 	}
 	void pop_back(void) {
 		_destruct(1);

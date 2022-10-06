@@ -1,5 +1,7 @@
-#ifndef NULLPTR_HPP
-#define NULLPTR_HPP
+#ifndef HELPER_HPP
+#define HELPER_HPP
+
+#include "iterator.hpp"
 
 namespace ft
 {
@@ -14,6 +16,8 @@ public:
 
 const nullptr_t    _nullptr = {};
 
+
+
 }
 
-#endif //NULLPTR_HPP
+#endif //HELPER_HPP
