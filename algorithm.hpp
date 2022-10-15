@@ -57,6 +57,18 @@ void	swap(T& lhs, T& rhs) {
 	rhs = C;
 }
 
+template<typename InputIt, typename OutputIt>
+OutputIt copy(InputIt first, InputIt last, OutputIt d_first) {
+	for (; first != last; (void)++first, (void)++d_first) *d_first = *first;
+	return d_first;
+}
+
+template<typename InputIt, typename OutputIt>
+OutputIt copy_backward(InputIt first, InputIt last, OutputIt d_last) {
+	for (; first != last; ) *(--d_last) = *(--last);
+	return d_last;
+}
+
 }
 
 #endif

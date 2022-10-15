@@ -10,24 +10,25 @@ namespace ft
  *	remove const, volatile,
  */
 
-template<typename T> struct	remove_const { typedef T	type; };
-template<typename T> struct	remove_const<const T> { typedef T	type; };
-
-template<typename T> struct	remove_volatile { typedef T	type; };
-template<typename T> struct	remove_volatile<volatile T> { typedef T		type; };
-
-template<typename T> struct	remove_cv {
-	typedef typename remove_const<typename remove_volatile<T>::type>::type		type;
-};
+template<typename T> struct	remove_cv { typedef T type; };
+template<typename T> struct	remove_cv<const T> { typedef T type; };
+template<typename T> struct	remove_cv<volatile T> { typedef T type; };
+template<typename T> struct	remove_cv<const volatile T> { typedef T type; };
 
 /*
- *	integral_base
+ * 	Const Bool Type
  */
-template <bool B, typename T>
-struct	integral_base
-{
-	typedef	T					type;
-	const static bool value		= B;
+
+struct true_type {
+	static const bool value = true;
+	typedef bool value_type;
+	typedef true_type type;
+};
+
+struct false_type {
+	static const bool value = false;
+	typedef bool value_type;
+	typedef false_type type;
 };
 
 /*
@@ -37,40 +38,42 @@ struct	integral_base
  *	short, int, long, long long
  */
 template <typename T>
-struct	is_integral_type : public integral_base<false, T> {};
+struct	is_integral_base : public false_type {};
 
-template <>	struct	is_integral_type<bool> : public integral_base<true, bool> {};
-template <>	struct	is_integral_type<signed char> : public integral_base<true, signed char> {};
-template <>	struct	is_integral_type<unsigned char> : public integral_base<true, unsigned char> {};
-template <>	struct	is_integral_type<wchar_t> : public integral_base<true, wchar_t> {};
-template <>	struct	is_integral_type<short> : public integral_base<true, short> {};
-template <>	struct	is_integral_type<unsigned short> : public integral_base<true, unsigned short> {};
-template <>	struct	is_integral_type<int> : public integral_base<true, int> {};
-template <>	struct	is_integral_type<unsigned int> : public integral_base<true, unsigned int> {};
-template <>	struct	is_integral_type<long> : public integral_base<true, long> {};
-template <>	struct	is_integral_type<unsigned long> : public integral_base<true, unsigned long> {};
-template <>	struct	is_integral_type<long long> : public integral_base<true, long long> {};
-template <>	struct	is_integral_type<unsigned long long> : public integral_base<true, unsigned long long> {};
-template <>	struct	is_integral_type<__int128_t> : public integral_base<true, __int128_t> {};
-template <>	struct	is_integral_type<__uint128_t> : public integral_base<true, __uint128_t> {};
+template <>	struct	is_integral_base<bool> : public true_type {};
+template <>	struct	is_integral_base<char> : public true_type {};
+template <>	struct	is_integral_base<signed char> : public true_type {};
+template <>	struct	is_integral_base<unsigned char> : public true_type {};
+template <>	struct	is_integral_base<char16_t> : public true_type {};
+template <>	struct	is_integral_base<char32_t> : public true_type {};
+template <>	struct	is_integral_base<wchar_t> : public true_type {};
+template <>	struct	is_integral_base<short int> : public true_type {};
+template <>	struct	is_integral_base<unsigned short int> : public true_type {};
+template <>	struct	is_integral_base<int> : public true_type {};
+template <>	struct	is_integral_base<unsigned int> : public true_type {};
+template <>	struct	is_integral_base<long int> : public true_type {};
+template <>	struct	is_integral_base<unsigned long int> : public true_type {};
+template <>	struct	is_integral_base<long long int> : public true_type {};
+template <>	struct	is_integral_base<unsigned long long int> : public true_type {};
+template <>	struct	is_integral_base<__int128_t> : public true_type {};
+template <>	struct	is_integral_base<__uint128_t> : public true_type {};
+
 
 /*
  *	is_integral
  */
 
 template<typename T>
-struct is_integral : public is_integral_type<typename remove_cv<T>::type> {};
+struct is_integral : public is_integral_base<typename remove_cv<T>::type> {};
 
 /*
  *	enable_if
  */
-template <bool B, typename T = void>
+template <bool, typename = void>
 struct	enable_if {};
 
 template <typename T>
 struct	enable_if<true, T> { typedef T	type; };
-
-
 
 }		//	FT
 #endif  //  TRAITS_HPP

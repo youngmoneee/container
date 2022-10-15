@@ -1,18 +1,16 @@
 #ifndef VECTOR_HPP
 # define VECTOR_HPP
 
+#include <iostream>
 #include "iter.hpp"
 #include "iterator.hpp"
 #include "helper.hpp"
 #include "traits.hpp"
+#include "algorithm.hpp"
 #include <memory>
+#include <algorithm>
 #include <stdexcept>
 #include <limits>
-//#include <iterator>
-#include "algorithm.hpp"
-#include <typeinfo>
-#include <algorithm>
-
 
 namespace ft {
 
@@ -92,10 +90,12 @@ public:		//	Cannonical
 
 
 	vector(const vector& v) : _alloc_(v._alloc_) {
-		size_type n = v.size();	// size 구현
-		_init(v.capacity());	// capacity 구현
-		_construct(n);
-		std::copy(v._begin_, v._end_, _begin_);
+		size_type n = v.size();
+		_begin_ = _alloc_.allocate(n);
+		_end_ = _begin_;
+		_cap_ = _begin_ + n;
+
+		for (pointer p = v._begin_; p != v._end_; ++p, ++_end_) _alloc_.construct(_end_, *p);
 	}
 
 	template <typename InputIterator>
@@ -104,14 +104,14 @@ public:		//	Cannonical
 		const allocator_type& alloc = allocator_type(),
 		typename enable_if<!ft::is_integral<InputIterator>::value>::type* = ft::_nullptr)
 		: _alloc_(alloc) {
-			difference_type n = ft::difference(random_access_iterator<InputIterator>(first), random_access_iterator<InputIterator>(last));
+			size_type n = ft::difference(first, last);
 			_init(n);
 			_construct(n);
-			std::copy(first, last, _begin_);
+			ft::copy(first, last, _begin_);
 		}
 
 	~vector(void) {
-		if (_begin_ == _nullptr) return ;
+		if (_begin_ == ft::_nullptr) return ;
 		size_type pre_cap = capacity();
 		_destruct(_begin_);
 		_alloc_.deallocate(_begin_, pre_cap);
@@ -133,7 +133,7 @@ public:		//	Cannonical
 	void reserve(size_type new_cap) {
 		if (new_cap > max_size()) throw std::out_of_range("Too much allocation");
 		if (new_cap <= capacity()) return ;
-		if (new_cap < capacity() * 2) new_cap <<= 2;
+		if (new_cap < capacity() * 2) new_cap = capacity() << 1;
 
 		pointer prebegin = _begin_;
 		pointer preend = _end_;
@@ -143,7 +143,6 @@ public:		//	Cannonical
 		_end_ = _begin_;
 		_cap_ = _begin_ + new_cap;
 
-	
 		for (pointer cur = prebegin; cur != preend; ++cur)
 			_construct(1, *cur);
 		for (pointer cur = preend; cur != prebegin; )
@@ -152,13 +151,9 @@ public:		//	Cannonical
 	}
 
 	void resize(size_type n, value_type value = value_type()) {
-		if (n > max_size()) throw std::length_error("Too much allocation");
-		if (size() > n) {
-			_destruct(size() - n);
-      		return;
-    	}
-    	//this->insert(end(), n - size(), value);
-		_construct(n - size(), value);
+		if (n > max_size()) throw std::out_of_range("Too much allocation");
+		if (size() > n) _destruct(size() - n);
+		else insert(_end_, n - size(), value);
 	}
 
 	void assign( size_type count, const T& value )
@@ -170,11 +165,12 @@ public:		//	Cannonical
 	}
 
 	template<typename Iter>
-	void assign(Iter first, Iter last, typename ft::enable_if<!ft::is_integral<Iter>::value>::type* = NULL) {
+	void assign(Iter first, Iter last, typename enable_if<!ft::is_integral<Iter>::value>::type* = ft::_nullptr) {
     	size_type n = ft::difference(first, last);
-		clear();
+		//size_type n = last - first;
 		if (capacity() < n) reserve(n);
-		for ( ; &*first != &*last; ++first) push_back(*first);
+		ft::copy(first, last, _begin_);
+		_end_ = _begin_ + n;
 	}
 
 	void clear(void) {
@@ -182,110 +178,55 @@ public:		//	Cannonical
 	}
 
 	void swap(vector& v) {
-		ft::swap(_begin_, v._begin_);
-		ft::swap(_end_, v._end_);
-		ft::swap(_cap_, v._cap_);
-		ft::swap(_alloc_, v._alloc_);
+		if (this == &v) return ;
+		std::swap(_begin_, v._begin_);
+		std::swap(_end_, v._end_);
+		std::swap(_cap_, v._cap_);
+		std::swap(_alloc_, v._alloc_);
 	}
 
 	iterator insert(iterator pos, const value_type& value) {
-		size_type idx = &*pos - _begin_;
-
-		insert(pos, 1, value);		
-		return _begin_ + idx;
+		size_type len = ft::difference(begin(), pos);
+		insert(pos, 1, value);
+		return begin() + len;
 	}
 
 	void insert(iterator pos, size_type n , const value_type& value) {
-		size_type idx = &*pos - _begin_;
-		
-		if (capacity() - size() >= n) {
-			for (size_type i = 0; i < size() - idx; ++i) {
-				_alloc_.construct(_end_ + n - i, *(_end_ - i));
-				_alloc_.destroy(_end_ - i);
-			}
-			_end_ = _begin_ + size() + n;
-			for (size_type i = 0; i < n; ++i)
-				_alloc_.construct(_begin_ + idx + i, value);
-			return ;
-		}
+		size_type len = pos - begin();
+		if (capacity() < size() + n) reserve(size() + n);
 
-		pointer pbegin = _begin_;
-		pointer pend = _end_;
-		size_type psz = size();
-		size_type pcap = capacity();
-
-		_begin_ = _alloc_.allocate(psz + n);
-		_end_ = _begin_ + psz + n;
-		_cap_ = _end_;
-
-		for (size_type i = 0; i < idx; ++i) {
-			_alloc_.construct(_begin_ + i, *(pbegin + i));
-			_alloc_.destroy(pbegin + i);
-		}
-
-		for (size_type i = 0; i < psz - idx; ++i) {
-			_alloc_.construct(_end_ - i - 1, *(pend - i - 1));
-			_alloc_.destroy(pend - i - 1);
-		}
-
-		for (size_type i = 0; i < n; ++i)
-			_alloc_.construct(_begin_ + idx + i, value);
-
-		_alloc_.deallocate(pbegin, pcap);
+		pointer ptr = _begin_ + len;
+		_construct(n);
+		ft::copy_backward(ptr, _end_ - n, _end_);
+		for (size_type i = 0; i < n; ++i) ptr[i] = value;
 	}
 
 	template<typename Iter>
-	void insert(iterator pos, Iter first, Iter last, typename enable_if<!is_integral<Iter>::value>::type* = NULL) {
-		size_type idx = &*pos - _begin_;
-		size_type n = &*last - &*first;
+	void insert(iterator pos, Iter first, Iter last, typename enable_if<!ft::is_integral<Iter>::value>::type* = ft::_nullptr) {
+		size_type iter_diff = ft::difference(first, last);
+		size_type len = ft::difference(begin(), pos);
 
-		if (capacity() >= size() + n) {
-			for (size_type i = 0; i < size() - idx; ++i) {
-				_alloc_.construct(_end_ + n - i, *(_end_ - i));
-				_alloc_.destroy(_end_ - i);
-			}
-			_end_ = _begin_ + size() + n;
-			for (size_type i = 0; i < n; ++i, ++first)
-				_alloc_.construct(_begin_ + idx + i, *first);
-			return ;
-		}
+		if (capacity() < size() + iter_diff) reserve(size() + iter_diff);
 
-		pointer pbegin = _begin_;
-		pointer pend = _end_;
-		size_type psz = size();
-		size_type pcap = capacity();
-
-		_begin_ = _alloc_.allocate(psz + n);
-		_end_ = _begin_ + psz + n;
-		_cap_ = _end_;
-
-		for (size_type i = 0; i < idx; ++i) {
-			_alloc_.construct(_begin_ + i, *(pbegin + i));
-			_alloc_.destroy(pbegin + i);
-		}
-
-		for (size_type i = 0; i < psz - idx; ++i) {
-			_alloc_.construct(_end_ - i - 1, *(pend - i - 1));
-			_alloc_.destroy(pend - i - 1);
-		}
-
-		for (size_type i = 0; i < n; ++i, ++first)
-			_alloc_.construct(_begin_ + idx + i, *first);
-		_alloc_.deallocate(pbegin, pcap);
+		pointer ptr = _begin_ + len;
+		_construct(iter_diff);
+		ft::copy_backward(ptr, _end_ - iter_diff, _end_);
+		ft::copy(first, last, begin() + len);
 	}
 
 	iterator erase(iterator pos) {
-		difference_type diff = pos - begin();
-		pointer ptr = _begin_ + diff;
-		std::copy(ptr + 1, _end_, ptr);	// ptr + 1부터 end까지를 ptr에 입력
+		size_type len = pos - begin();
+		pointer ptr = _begin_ + len;
+
+		ft::copy(ptr + 1, _end_, ptr);
 		_destruct(1);
 		return iterator(ptr);
 	}
 
 	iterator erase(iterator first, iterator last) {
-		difference_type n = std::distance(first, last);
-		std::copy(last, end(), first);
-		_destruct(n);
+		size_type iter_diff = ft::difference(first, last);
+		ft::copy(last, end(), first);
+		_destruct(iter_diff);
 		return first;
 	}
 
@@ -295,13 +236,13 @@ public:		//	Cannonical
 
 	//	Iterator
 	iterator begin(void) {	return iterator(_begin_); }
-	const iterator begin(void) const { return iterator(_begin_); }
+	const_iterator begin(void) const { return iterator(_begin_); }
 	iterator end(void) { return iterator(_end_); }
-	const iterator end(void) const { return iterator(_end_); }
+	const_iterator end(void) const { return iterator(_end_); }
 	reverse_iterator rbegin(void) { return reverse_iterator(end()); }
-	const reverse_iterator rbegin(void) const { return reverse_iterator(end()); }
+	const_reverse_iterator rbegin(void) const { return reverse_iterator(end()); }
 	reverse_iterator rend(void) { return reverse_iterator(begin()); }
-	const reverse_iterator rend(void) const { return reverse_iterator(begin()); }
+	const_reverse_iterator rend(void) const { return reverse_iterator(begin()); }
 
 	//	Elem Access
 	reference front(void) { return *_begin_; }
@@ -326,10 +267,11 @@ public:		//	Cannonical
 		return _begin_[n];
 	}
 	void push_back(const T& value) {
-		if (size() + 1 > capacity())
-			reserve(size() + 1);
+		if (_end_ == _cap_)
+			reserve(empty() ? 1 : capacity() * 2);
+		//if (_cap_ == _end_)
+		//	reserve(size() + 1);
 		_construct(1, value);
-		//*(_end_ - 1) = value;
 	}
 	void pop_back(void) {
 		_destruct(1);
@@ -337,39 +279,40 @@ public:		//	Cannonical
 };
 
 template<typename T, typename _Alloc>
-bool operator==(const vector<T, _Alloc>& lhs, const vector<T, _Alloc>& rhs) {
-	return lhs.size() == rhs.size() && equal(lhs.begin(), lhs.end(), rhs.begin());
+bool operator==(const ft::vector<T, _Alloc>& lhs, const ft::vector<T, _Alloc>& rhs) {
+	return lhs.size() == rhs.size() && ft::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
 template<typename T, typename _Alloc>
-bool operator!=(const vector<T, _Alloc>& lhs, const vector<T, _Alloc>& rhs) {
+bool operator!=(const ft::vector<T, _Alloc>& lhs, const ft::vector<T, _Alloc>& rhs) {
 	return !(lhs == rhs);
 }
 
 template<typename T, typename _Alloc>
-bool operator<(const vector<T, _Alloc>& lhs, const vector<T, _Alloc>& rhs) {
-	return lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+bool operator<(const ft::vector<T, _Alloc>& lhs, const ft::vector<T, _Alloc>& rhs) {
+	return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 }
 
 template<typename T, typename _Alloc>
-bool operator<=(const vector<T, _Alloc>& lhs, const vector<T, _Alloc>& rhs) {
+bool operator<=(const ft::vector<T, _Alloc>& lhs, const ft::vector<T, _Alloc>& rhs) {
 	return lhs == rhs || lhs < rhs;
 }
 
 template<typename T, typename _Alloc>
-bool operator>(const vector<T, _Alloc>& lhs, const vector<T, _Alloc>& rhs) {
-	return !(lhs <= rhs);
+bool operator>(const ft::vector<T, _Alloc>& lhs, const ft::vector<T, _Alloc>& rhs) {
+	return ft::lexicographical_compare(rhs.begin(), rhs.end(), lhs.begin(), lhs.end());
 }
 
 template<typename T, typename _Alloc>
-bool operator>=(const vector<T, _Alloc>& lhs, const vector<T, _Alloc>& rhs) {
-	return !(lhs < rhs);
+bool operator>=(const ft::vector<T, _Alloc>& lhs, const ft::vector<T, _Alloc>& rhs) {
+	return lhs == rhs || lhs > rhs;
 }
 
 template<typename T, typename _Alloc>
 void swap(vector<T, _Alloc>& lhs, vector<T, _Alloc>& rhs) {
-	return lhs.swap(rhs);
+	lhs.swap(rhs);
 }
+
 
 }	// FT
 #endif
