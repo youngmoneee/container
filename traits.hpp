@@ -19,17 +19,17 @@ template<typename T> struct	remove_cv<const volatile T> { typedef T type; };
  * 	Const Bool Type
  */
 
-struct true_type {
-	static const bool value = true;
-	typedef bool value_type;
-	typedef true_type type;
+template <typename T, T v>
+struct integral_constant {
+	static const T value = v;
+	typedef T value_type;
+	typedef integral_constant<T, v> type;
+	operator value_type() { return value; }
+	value_type operator()() const ;
 };
 
-struct false_type {
-	static const bool value = false;
-	typedef bool value_type;
-	typedef false_type type;
-};
+typedef integral_constant<bool,true> true_type;
+typedef integral_constant<bool,false> false_type;
 
 /*
  *	is_integral_type
@@ -47,14 +47,14 @@ template <>	struct	is_integral_base<unsigned char> : public true_type {};
 template <>	struct	is_integral_base<char16_t> : public true_type {};
 template <>	struct	is_integral_base<char32_t> : public true_type {};
 template <>	struct	is_integral_base<wchar_t> : public true_type {};
-template <>	struct	is_integral_base<short int> : public true_type {};
-template <>	struct	is_integral_base<unsigned short int> : public true_type {};
+template <>	struct	is_integral_base<short> : public true_type {};
+template <>	struct	is_integral_base<unsigned short> : public true_type {};
 template <>	struct	is_integral_base<int> : public true_type {};
 template <>	struct	is_integral_base<unsigned int> : public true_type {};
-template <>	struct	is_integral_base<long int> : public true_type {};
-template <>	struct	is_integral_base<unsigned long int> : public true_type {};
-template <>	struct	is_integral_base<long long int> : public true_type {};
-template <>	struct	is_integral_base<unsigned long long int> : public true_type {};
+template <>	struct	is_integral_base<long> : public true_type {};
+template <>	struct	is_integral_base<unsigned long> : public true_type {};
+template <>	struct	is_integral_base<long long> : public true_type {};
+template <>	struct	is_integral_base<unsigned long long> : public true_type {};
 template <>	struct	is_integral_base<__int128_t> : public true_type {};
 template <>	struct	is_integral_base<__uint128_t> : public true_type {};
 

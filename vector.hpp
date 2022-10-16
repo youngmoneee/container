@@ -125,7 +125,7 @@ public:		//	Cannonical
 	}
 
 	//	Size
-	bool empty(void) const {			return begin() == end(); }
+	bool empty(void) const {		return begin() == end(); }
 	size_type max_size(void) const {return _alloc_.max_size(); }
 	size_type size(void) const {	return _end_ - _begin_; }
 	size_type capacity(void) const {return _cap_ - _begin_; }
@@ -167,7 +167,6 @@ public:		//	Cannonical
 	template<typename Iter>
 	void assign(Iter first, Iter last, typename enable_if<!ft::is_integral<Iter>::value>::type* = ft::_nullptr) {
     	size_type n = ft::difference(first, last);
-		//size_type n = last - first;
 		if (capacity() < n) reserve(n);
 		ft::copy(first, last, _begin_);
 		_end_ = _begin_ + n;
@@ -202,10 +201,11 @@ public:		//	Cannonical
 	}
 
 	template<typename Iter>
-	void insert(iterator pos, Iter first, Iter last, typename enable_if<!ft::is_integral<Iter>::value>::type* = ft::_nullptr) {
+	void insert(iterator pos, Iter first, Iter last, typename enable_if<!ft::is_integral<Iter>::value>::type* = NULL) {
 		size_type iter_diff = ft::difference(first, last);
 		size_type len = ft::difference(begin(), pos);
 
+		if (iter_diff > max_size()) throw bad_alloc();
 		if (capacity() < size() + iter_diff) reserve(size() + iter_diff);
 
 		pointer ptr = _begin_ + len;
@@ -266,11 +266,9 @@ public:		//	Cannonical
 		if (size() < n) throw std::out_of_range("index out of range");
 		return _begin_[n];
 	}
-	void push_back(const T& value) {
+	void push_back(const_value_type& value) {
 		if (_end_ == _cap_)
 			reserve(empty() ? 1 : capacity() * 2);
-		//if (_cap_ == _end_)
-		//	reserve(size() + 1);
 		_construct(1, value);
 	}
 	void pop_back(void) {
@@ -313,6 +311,13 @@ void swap(vector<T, _Alloc>& lhs, vector<T, _Alloc>& rhs) {
 	lhs.swap(rhs);
 }
 
-
 }	// FT
+
+namespace std {
+template <typename T, typename Alloc>
+void swap (ft::vector<T,Alloc>& lhs, ft::vector<T,Alloc>& rhs) {
+	lhs.swap(rhs);
+}
+}	//	STD
+
 #endif

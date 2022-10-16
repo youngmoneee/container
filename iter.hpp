@@ -11,16 +11,18 @@ namespace ft
 //	Random Iterator
 template <typename T>
 class random_access_iterator
-: public std::iterator<random_access_iterator_tag, T>
+: public iterator<std::random_access_iterator_tag, T>
 {
 public:
-	typedef T*															iterator_type;
+	typedef T*																iterator_type;
 	typedef typename ft::iterator_traits<iterator_type>::value_type			value_type;
 	typedef typename ft::iterator_traits<iterator_type>::difference_type	difference_type;
 	typedef typename ft::iterator_traits<iterator_type>::pointer			pointer;
 	typedef typename ft::iterator_traits<iterator_type>::reference			reference;
 
-	random_access_iterator(pointer ptr = ft::_nullptr) : cur(ptr) {};
+	//random_access_iterator(pointer ptr = ft::_nullptr) : cur(ptr) {};
+	random_access_iterator(pointer ptr) : cur(ptr) {};
+	random_access_iterator() : cur(T()) {};
 	template<typename U>
 	random_access_iterator(const random_access_iterator<U>& ref) : cur(ref.base()) {};
 	~random_access_iterator(void) {};
