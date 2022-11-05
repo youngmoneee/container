@@ -210,7 +210,8 @@ public:
 
 	tree_iterator& operator=(const tree_iterator& rhs) {
 		if (this == &rhs) return *this;
-		this.cur = rhs.base();
+		cur = rhs.cur;
+		nil = rhs.nil;
 		return *this;
 	}
 
