@@ -195,9 +195,13 @@ public:		//	Cannonical
 		if (capacity() < size() + n) reserve(size() + n);
 
 		pointer ptr = _begin_ + len;
-		_construct(n);
-		ft::copy_backward(ptr, _end_ - n, _end_);
-		for (size_type i = 0; i < n; ++i) ptr[i] = value;
+		try {
+			_construct(n);
+			ft::copy_backward(ptr, _end_ - n, _end_);
+			for (size_type i = 0; i < n; ++i) ptr[i] = value;
+		} catch (...) {
+			_destruct(n);
+		}
 	}
 
 	template<typename Iter>

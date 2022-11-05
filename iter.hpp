@@ -187,9 +187,9 @@ public:
 	private:
 	iterator_type	cur;
 };
-/*
+
 template<typename T, typename U>
-class tree_iterator : public iterator<bidirectional_iterator_tag, T>
+class tree_iterator// : public iterator<bidirectional_iterator_tag, T>
 {
 public:
 	typedef T			value_type;
@@ -203,9 +203,9 @@ public:
 	typedef typename iterator_traits<iterator_type>::difference_type	difference_type;
 	typedef typename iterator_traits<iterator_type>::iterator_category	iterator_category;
 
-	tree_iterator(void) : cur(_nullptr) {};
-	tree_iterator(node_pointer cur) : cur(cur) {};
-	tree_iterator(const tree_iterator& ref) : cur(ref.base()) {};
+	tree_iterator(void) : cur(ft::nil), nil(ft::nil) {};
+	tree_iterator(node_pointer cur, node_pointer nil) : cur(cur), nil(nil) {};
+	tree_iterator(const tree_iterator& ref) : cur(ref.cur), nil(ref.nil) {};
 	~tree_iterator(void) {};
 
 	tree_iterator& operator=(const tree_iterator& rhs) {
@@ -219,13 +219,49 @@ public:
 	reference		operator*(void) const { return cur->value; }
 
 	tree_iterator&	operator++(void) {
-		cur = cur.
+		cur = &cur->next();
+		return *this;
+	}
+	tree_iterator&	operator--(void) {
+		cur = &cur->prev();
+		return *this;
+	}
+	tree_iterator	operator++(int) {
+		tree_iterator	ret(*this);
+		operator++();
+		return ret;
+	}
+	tree_iterator	operator--(int) {
+		tree_iterator	ret(*this);
+		operator--();
+		return ret;
 	}
 
-protected:
-	node_pointer		cur;
+	template<typename V>
+	bool operator==(const tree_iterator<V, node_type>& rhs) const {
+		return cur == rhs.base();
+	}
+	template<typename V>
+	bool operator!=(const tree_iterator<V, node_type>& rhs) const {
+		return cur != rhs.base();
+	}
+
+	operator tree_iterator<const value_type, node_type>(void) const {
+		return tree_iterator<const value_type, node_type>(cur);
+	}
+
+	friend bool operator==(const tree_iterator& lhs, const tree_iterator& rhs) {
+		return lhs.cur == rhs.cur;
+	}
+	friend bool operator!=(const tree_iterator& lhs, const tree_iterator& rhs) {
+		return lhs.cur != rhs.cur;
+	}
+
+	protected:
+		node_pointer		cur;
+		node_pointer		nil;
 };
-*/
+
 
 	//	Reverse relational
 	template <typename T, typename U>
