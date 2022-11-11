@@ -7,8 +7,8 @@
 	#include <vector>
 	namespace ft = std;
 #else
-	#include <map>
-	#include <stack>
+	#include "map.hpp"
+	#include "stack.hpp"
 	#include "vector.hpp"
 #endif
 

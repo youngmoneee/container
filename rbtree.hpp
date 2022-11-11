@@ -7,7 +7,7 @@
 # include "algorithm.hpp"
 
 # include <memory>
-# include <algorithm>
+//# include <algorithm>
 
 namespace ft
 {
@@ -693,8 +693,8 @@ protected:
 		get_alloc().destroy(&target->value);
 		put_node(target);
 	}
-
-	template<typename KeyComp, bool is_pod = ft::is_pod<KeyComp>::value>
+protected:
+	template<typename KeyComp, bool is_pod_b = ft::is_pod<KeyComp>::value>
 	struct RbTreeImpl : public node_allocator
 	{
 		KeyComp		keyCompare;
@@ -975,20 +975,20 @@ public:
 
 	const_iterator insert_unique(const_iterator pos, const value_type& v)
 	{
-		if (pos.node == end())
+		if (pos.node == iend())
 		{
-			if (!empty() && impl.keyCompare(getKey(get_rightest()), KV()(v))) return insert(0, get_rightest(), v);
+			if (!empty() && impl.keyCompare(getKey(get_rightest()), KV()(v))) return minsert(0, get_rightest(), v);
 			else return const_iterator(insert_unique(v).first);
 		}
 		else if (impl.keyCompare(KV()(v), getKey(pos.node)))
 		{
 			const_iterator	before = pos;
 
-			if (pos.node == get_leftest()) return insert(get_leftest(), get_leftest(), v);
+			if (pos.node == get_leftest()) return minsert(get_leftest(), get_leftest(), v);
 			else if (impl.keyCompare(getKey((--before).node), KV()(v)))
 			{
-				if (getRight(before.node) == 0) return insert(0, before.node, v);
-				else return insert(pos.node, pos.node, v);
+				if (getRight(before.node) == 0) return minsert(0, before.node, v);
+				else return minsert(pos.node, pos.node, v);
 			}
 			else return const_iterator(insert_unique(v).first);
 		}
@@ -996,11 +996,11 @@ public:
 		{
 			const_iterator	after = pos;
 
-			if (pos.node == get_rightest()) return insert(0, get_rightest(), v);
+			if (pos.node == get_rightest()) return minsert(0, get_rightest(), v);
 			else if (impl.keyCompare(KV()(v), getKey((++after).node)))
 			{
-				if (getRight(pos.node) == 0) return insert(0, pos.node, v);
-				else return insert(after.node, after.node, v);
+				if (getRight(pos.node) == 0) return minsert(0, pos.node, v);
+				else return minsert(after.node, after.node, v);
 			}
 			else return const_iterator(insert_unique(v).first);
 		}
@@ -1137,18 +1137,27 @@ public:
 	void erase(iterator first, iterator last)
 	{
 		if (first == begin() && last == end()) clear();
-		else for (; first != last; ++first) erase(first);
+		else
+		{
+			while (first != last)
+				erase(first++);
+		}
 	}
 
 	void erase(const_iterator first, const_iterator last)
 	{
 		if (first == begin() && last == end()) clear();
-		else for (; first != last; ++first) erase(first);
+		else
+		{
+			while (first != last)
+				erase(first++);
+		}
 	}
 
 	void erase(const key_type* first, const key_type* last)
 	{
-		for (; first != last; ++first) erase(*first);
+		while (first != last)
+			erase(*first++);
 	}
 
 	void clear()

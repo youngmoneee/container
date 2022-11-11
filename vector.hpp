@@ -70,8 +70,6 @@ private:	//	Function
 		for (; _end_ != until && _end_; --_end_) _alloc_.destroy(_end_);
 	}
 
-
-
 public:		//	Cannonical
 	explicit vector(const allocator_type& alloc = allocator_type())
 		: _alloc_(alloc),
@@ -112,7 +110,6 @@ public:		//	Cannonical
 	~vector(void) {
 		if (_begin_ == 0) return ;
 		size_type pre_cap = capacity();
-		_destruct(_begin_);
 		_alloc_.deallocate(_begin_, pre_cap);
 	}
 
@@ -194,23 +191,18 @@ public:		//	Cannonical
 		if (capacity() < size() + n) reserve(size() + n);
 
 		pointer ptr = _begin_ + len;
-		try {
-			_construct(n);
-			ft::copy_backward(ptr, _end_ - n, _end_);
-			for (size_type i = 0; i < n; ++i) ptr[i] = value;
-		} catch (...) {
-			_destruct(n);
-		}
+		_construct(n);
+		ft::copy_backward(ptr, _end_ - n, _end_);
+		for (size_type i = 0; i < n; ++i) ptr[i] = value;
 	}
 
 	template<typename Iter>
-	void insert(iterator pos, Iter first, Iter last, typename enable_if<!ft::is_integral<Iter>::value>::type* = NULL) {
+	void insert(iterator pos, Iter first, Iter last, typename enable_if<!ft::is_integral<Iter>::value>::type* = nullptr) {
 		size_type iter_diff = ft::difference(first, last);
 		size_type len = ft::difference(begin(), pos);
 
 		if (iter_diff > max_size()) throw std::bad_alloc();
 		if (capacity() < size() + iter_diff) reserve(size() + iter_diff);
-
 		pointer ptr = _begin_ + len;
 		_construct(iter_diff);
 		ft::copy_backward(ptr, _end_ - iter_diff, _end_);

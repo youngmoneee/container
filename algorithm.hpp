@@ -39,7 +39,7 @@ bool lexicographical_compare(Iter1 first1, Iter1 last1, Iter2 first2, Iter2 last
 template<typename T>
 struct less : std::binary_function<T, T, bool>
 {
-	bool operator()(const T& lhs, const T& rhs) {
+	bool operator()(const T& lhs, const T& rhs) const {
 		return lhs < rhs;
 	}
 };
@@ -47,21 +47,14 @@ struct less : std::binary_function<T, T, bool>
 template<typename T>
 struct greater : std::binary_function<T, T, bool>
 {
-	bool operator()(const T& lhs, const T& rhs) {
+	bool operator()(const T& lhs, const T& rhs) const {
 		return lhs > rhs;
 	}
 };
-/*
-template<typename T>
-void	swap(T& lhs, T& rhs) {
-	T	C = lhs;
-	lhs = rhs;
-	rhs = C;
-}
-*/
+
 template<typename InputIt, typename OutputIt>
 OutputIt copy(InputIt first, InputIt last, OutputIt d_first) {
-	for (; first != last; (void)++first, (void)++d_first) *d_first = *first;
+	for (; first != last; ++first, ++d_first) *d_first = *first;
 	return d_first;
 }
 
@@ -77,6 +70,16 @@ struct Select1st : public std::unary_function<Pair, typename Pair::first_type>
 	typename Pair::first_type& operator()(Pair& x) const { return x.first; }
 	const typename Pair::first_type& operator()(const Pair& x) const { return x.first; }
 };
+
+template <typename T>
+struct Identity : public std::unary_function<T, T>
+{
+	T& operator()(T& x) const { return x; }
+	const T& operator()(const T& x) const { return x; }
+};
+
+template <typename T>
+struct Identity <const T> : Identity<T> {};
 
 }
 

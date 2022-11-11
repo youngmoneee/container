@@ -192,9 +192,6 @@ protected:
 	iterator_type	cur;
 };
 
-
-
-
 	//	Reverse relational
 	template <typename T, typename U>
 	bool operator==(const ft::reverse_iterator<T>& lhs, const ft::reverse_iterator<U>& rhs) {
