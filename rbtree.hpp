@@ -1,13 +1,13 @@
 #ifndef RBTREE_HPP
 # define RBTREE_HPP
 
-# include "iter.hpp"
 # include "utilities.hpp"
 # include "iter.hpp"
-# include "iterator.hpp"
 # include "pair.hpp"
+# include "algorithm.hpp"
 
 # include <memory>
+# include <algorithm>
 
 namespace ft
 {
@@ -58,10 +58,10 @@ struct rb_node : public tree_node
 tree_node*
 tree_increment(tree_node* ptr)
 {
-	if (ptr->right != 0)
+	if (ptr->right)
 	{
 		ptr = ptr->right;
-		while (ptr->left != 0) ptr = ptr->left;
+		while (ptr->left) ptr = ptr->left;
 	}
 	else
 	{
@@ -88,10 +88,10 @@ tree_decrement(tree_node* ptr)
 {
 	if (ptr->color == RED && ptr->parent->parent == ptr)
 		ptr = ptr->right;
-	else if (ptr->left != 0)
+	else if (ptr->left)
 	{
 		tree_node* tmp = ptr->left;
-		while(tmp->right != 0) tmp = tmp->right;
+		while(tmp->right) tmp = tmp->right;
 		ptr = tmp;
 	}
 	else
@@ -114,12 +114,13 @@ tree_decrement(const tree_node* ptr)
 }
 
 template<typename T>
-class rb_iterator
+struct rb_iterator
 {
 public:
 	typedef T								value_type;
-	typedef value_type*						pointer;
-	typedef	value_type&						reference;
+	typedef T*								pointer;
+	typedef	T&								reference;
+
 	typedef std::bidirectional_iterator_tag	iterator_category;
 	typedef ptrdiff_t						difference_type;
 
@@ -127,7 +128,7 @@ public:
 	typedef	tree_node::node_ptr				node_ptr;
 	typedef rb_node<T>*						link_type;
 
-	link_type								node;
+	node_ptr 								node;
 
 	rb_iterator() : node() {};
 	explicit rb_iterator(link_type tp) : node(tp) {};
@@ -136,79 +137,82 @@ public:
 	reference operator*() const { return static_cast<link_type>(node)->value; }
 	pointer	operator->() const { return &static_cast<link_type>(node)->value; }
 
-	rb_iterator& operator++() {
+	self& operator++() {
 		node = tree_increment(node);
 		return *this;
 	}
-	rb_iterator operator++(int) {
-		rb_iterator tmp = *this;
-		operator++();
+	self operator++(int) {
+		self tmp = *this;
+		node = tree_increment(node);
 		return tmp;
 	}
-	rb_iterator& operator--() {
+	self& operator--() {
 		node = tree_decrement(node);
 		return *this;
 	}
-	rb_iterator operator--(int) {
-		rb_iterator tmp = *this;
-		operator--();
+	self operator--(int) {
+		self tmp = *this;
+		node = tree_decrement(node);
 		return tmp;
 	}
 
-	bool operator==(const rb_iterator& rhs) {
+	bool operator==(const self& rhs) const {
 		return node == rhs.node;
 	}
-	bool operator!=(const rb_iterator& rhs) {
+	bool operator!=(const self& rhs) const {
 		return node != rhs.node;
 	}
 };
 
 template<typename T>
-class const_rb_iterator
+struct const_rb_iterator
 {
 public:
 	typedef T								value_type;
-	typedef const value_type*				pointer;
-	typedef	const value_type&				reference;
+	typedef const T*						pointer;
+	typedef	const T&						reference;
 	typedef std::bidirectional_iterator_tag	iterator_category;
 	typedef ptrdiff_t						difference_type;
 
+	typedef rb_iterator<T>					iterator;
+
 	typedef	tree_node::const_node_ptr		node_ptr;
 	typedef const rb_node<T>*				link_type;
+	typedef const_rb_iterator<T>			self;
 
-	link_type								node;
+	node_ptr								node;
 
 	const_rb_iterator() : node() {};
-	const_rb_iterator(const rb_iterator<T>& iter) : node(iter.node) {};
+	const_rb_iterator(const iterator& iter) : node(iter.node) {};
 	explicit const_rb_iterator(link_type tp) : node(tp) {};
 	~const_rb_iterator() {};
 
 	reference operator*() const { return static_cast<link_type>(node)->value; }
 	pointer	operator->() const { return &static_cast<link_type>(node)->value; }
 
-	const_rb_iterator& operator++() {
+	self& operator++() {
 		node = tree_increment(node);
 		return *this;
 	}
-	const_rb_iterator operator++(int) {
-		rb_iterator tmp = *this;
-		operator++();
+	self operator++(int) {
+		self tmp = *this;
+		node = tree_increment(node);
 		return tmp;
 	}
-	rb_iterator& operator--() {
+	self& operator--() {
 		node = tree_decrement(node);
 		return *this;
 	}
-	rb_iterator operator--(int) {
-		rb_iterator tmp = *this;
-		operator--();
+	self operator--(int) {
+		self tmp = *this;
+		node = tree_decrement(node);
 		return tmp;
 	}
 
-	bool operator==(const const_rb_iterator& rhs) {
+	bool operator==(const self& rhs) const {
 		return node == rhs.node;
 	}
-	bool operator!=(const const_rb_iterator& rhs) {
+	bool operator!=(const self& rhs) const {
 		return node != rhs.node;
 	}
 };
@@ -220,52 +224,44 @@ template<typename T>
 bool operator!=(const rb_iterator<T>& lhs, const const_rb_iterator<T>& rhs)
 { return lhs.node != rhs.node; }
 
-void tree_rotate_left(const tree_node* target, tree_node* root)
+void tree_rotate_left(tree_node* const x, tree_node*& root)
 {
-	const tree_node* tmp = target->right;
+	tree_node* const y = x->right;
 
-	target->right = tmp->left;
-	if (tmp->left != 0)
-		tmp->left->parent = target;
-	tmp->parent = target->parent;
+	x->right = y->left;
+	if (y->left) y->left->parent = x;
+	y->parent = x->parent;
 
-	if (target == root)
-		root = tmp;
-	else if (target == target->parent->left)
-		target->parent->left = y;
-	else
-		target->parent->right = tmp;
-	tmp->left = target;
-	target->parent = tmp;
+	if (x == root) root = y;
+	else if (x == x->parent->left) x->parent->left = y;
+	else x->parent->right = y;
+	y->left = x;
+	x->parent = y;
 }
 
-void tree_rotate_right(const tree_node* target, tree_node* root)
+void tree_rotate_right(tree_node* const x, tree_node*& root)
 {
-	const tree_node*	tmp = target->left;
+	tree_node* const	y = x->left;
 
-	target->left = tmp->right;
-	if (tmp->right != 0)
-		tmp->right->parent = target;
-	tmp->parent = target->parent;
+	x->left = y->right;
+	if (y->right) y->right->parent = x;
+	y->parent = x->parent;
 
-	if (target == root)
-		root = tmp;
-	else if (target == target->parent->right)
-		target->parent->right = tmp;
-	else
-		target->parent->left = tmp;
-	tmp->right = target;
-	target->parent = tmp;
+	if (x == root) root = y;
+	else if (x == x->parent->right) x->parent->right = y;
+	else x->parent->left = y;
+	y->right = x;
+	x->parent = y;
 }
 
 void insert_rebalance(const bool insert_left, tree_node* target, tree_node* parent, tree_node& header)
 {
-	const tree_node*& root = header.parent;
+	tree_node*& root = header.parent;
 
 	target->parent = parent;
 	target->left = 0;
 	target->right = 0;
-	target = RED;
+	target->color = RED;
 
 	/**
 	 * @brief : Insert, First node should be Left node
@@ -289,10 +285,10 @@ void insert_rebalance(const bool insert_left, tree_node* target, tree_node* pare
 	 * @brief : Rebalance
 	 */
 	 while (target != root && target->parent->color == RED) {
-		 const tree_node* parpar = target->parent->parent;
+		 tree_node* const parpar = target->parent->parent;
 
 		 if (target->parent == parpar->left) {
-			 const tree_node*	tmp = parpar->right;
+			 tree_node* const	tmp = parpar->right;
 
 			 if (tmp && tmp->color == RED) {//	#Case 1
 				target->parent->color = BLACK;
@@ -310,9 +306,9 @@ void insert_rebalance(const bool insert_left, tree_node* target, tree_node* pare
 			 }
 		 }
 		 else {
-			 const tree_node*	tmp = parpar->left;
+			 tree_node* const	tmp = parpar->left;
 
-			 if (tmp && tmp->color = RED) {	//	#Case 1
+			 if (tmp && tmp->color == RED) {	//	#Case 1
 				 target->parent->color = BLACK;
 				 tmp->color = BLACK;
 				 parpar->color = RED;
@@ -331,27 +327,201 @@ void insert_rebalance(const bool insert_left, tree_node* target, tree_node* pare
 	 root->color = BLACK;
 }
 
-tree_node*	rebalance_erase(const tree_node* z, tree_node& header)
+tree_node*
+rebalance_erase(tree_node* const z,
+							tree_node& header)
+{
+	tree_node*& root = header.parent;
+	tree_node*& leftmost = header.left;
+	tree_node*& rightmost = header.right;
+	tree_node* y = z;
+	tree_node* x = 0;
+	tree_node* x_parent = 0;
+
+	if (y->left == 0)     // z has at most one non-null child. y == z.
+		x = y->right;       // x might be null.
+	else
+	{
+		if (y->right == 0)  // z has exactly one non-null child. y == z.
+			x = y->left;      // __x is not null.
+		else
+		{
+			// z has two non-null children.
+			y = y->right;   // Set y to z's successor.  x might be null.
+			while (y->left != 0)
+				y = y->left;
+			x = y->right;
+		}
+	}
+
+	if (y != z)
+	{
+		// relink y in place of z.  y is z's successor
+		z->left->parent = y;
+		y->left = z->left;
+		if (y != z->right)
+		{
+			x_parent = y->parent;
+			if (x) x->parent = y->parent;
+			y->parent->left = x;   // y must be a child of M_left
+			y->right = z->right;
+			z->right->parent = y;
+		}
+		else
+			x_parent = y;
+
+		if (root == z)
+			root = y;
+		else if (z->parent->left == z)
+			z->parent->left = y;
+		else
+			z->parent->right = y;
+		y->parent = z->parent;
+		std::swap(y->color, z->color);
+		y = z;
+		// y now points to node to be actually deleted
+	}
+	else
+	{
+		// y == z
+		x_parent = y->parent;
+		if (x)
+			x->parent = y->parent;
+
+		if (root == z)
+			root = x;
+		else
+		{
+			if (z->parent->left == z)
+				z->parent->left = x;
+			else
+				z->parent->right = x;
+		}
+
+		if (leftmost == z)
+		{
+			if (z->right == 0)        // __z->_M_left must be null also
+				leftmost = z->parent;
+			else                        // makes __leftmost == _M_header if __z == __root
+				leftmost = tree_node::minimum(x);
+		}
+
+		if (rightmost == z)
+		{
+			if (z->left == 0)         // __z->_M_right must be null also
+				rightmost = z->parent;
+			else                        	// makes __rightmost == _M_header if __z == __root
+				rightmost = tree_node::maximum(x);  // __x == __z->_M_left
+		}
+	}
+
+	if (y->color != RED)
+	{
+		while (x != root && (x == 0 || x->color == BLACK))
+		{
+			if (x == x_parent->left)
+			{
+				tree_node* w = x_parent->right;
+				if (w->color == RED)  // Case 1
+				{
+					w->color = BLACK;
+					x_parent->color = RED;
+					tree_rotate_left(x_parent, root);
+					w = x_parent->right;
+				}
+
+				if ((w->left == 0 ||
+					 w->left->color == BLACK) &&
+					(w->right == 0 ||
+					 w->right->color == BLACK))  // Case 2
+				{
+					w->color = RED;
+					x = x_parent;
+					x_parent = x_parent->parent;
+				}
+				else
+				{
+					if (w->right == 0
+						|| w->right->color == BLACK) // Case 3
+					{
+						w->left->color = BLACK;
+						w->color = RED;
+						tree_rotate_right(w, root);
+						w = x_parent->right;
+					}
+					w->color = x_parent->color; // Case 4
+					x_parent->color = BLACK;
+					if (w->right)
+						w->right->color = BLACK;
+					tree_rotate_left(x_parent, root);
+					break;
+				}
+			}
+			else
+			{
+				// same as above, with _M_right <-> _M_left.
+				tree_node* w = x_parent->left;
+				if (w->color == RED)  // Case 1
+				{
+					w->color = BLACK;
+					x_parent->color = RED;
+					tree_rotate_right(x_parent, root);
+					w = x_parent->left;
+				}
+
+				if ((w->right == 0 ||
+					 w->right->color == BLACK) &&
+					(w->left == 0 ||
+					 w->left->color == BLACK))  // Case 2
+				{
+					w->color = RED;
+					x = x_parent;
+					x_parent = x_parent->parent;
+				}
+				else
+				{
+					if (w->left == 0
+						|| w->left->color == BLACK)  // Case 3
+					{
+						w->right->color = BLACK;
+						w->color = RED;
+						tree_rotate_left(w, root);
+						w = x_parent->left;
+					}
+					w->color = x_parent->color; // Case 4
+					x_parent->color = BLACK;
+					if (w->left)
+						w->left->color = BLACK;
+					tree_rotate_right(x_parent, root);
+					break;
+				}
+			}
+		}
+		if (x) x->color = BLACK;
+	}
+	return y;
+}
+/*
+tree_node*	rebalance_erase(tree_node* const z, tree_node& header)
 {
 	tree_node*&		root = header.parent;
 	tree_node*&		leftest = header.left;
 	tree_node*&		rightest = header.right;
-	tree_node*		x = 0;
+	tree_node*		x;
+	tree_node*		xp;
 	tree_node*		y = z;
-	tree_node*		x_par = 0;
 
-	if (y->left == 0)
+
+	if (!y->left)
 		x = y->right;
 	else
 	{
-		if (y->right == 0)
+		if (!y->right)
 			x = y->left;
 		else
 		{
-			//	z has one or more non-null, y == z
 			y = y->right;
-			while (y->left != 0)
-				y = y->left;
+			while (y->left) y = y->left;
 			x = y->right;
 		}
 	}
@@ -363,14 +533,13 @@ tree_node*	rebalance_erase(const tree_node* z, tree_node& header)
 		y->left = z->left;
 		if (y != z->right)
 		{
-			x_par = y->parent;
+			xp = y->parent;
 			if (x) x->parent = y->parent;
 			y->parent->left = x;
 			y->right = z->right;
 			z->right->parent = y;
 		}
-		else
-			x_par = y;
+		else xp = y;
 
 		if (root == z) root = y;
 		else if (z->parent->left == z) z->parent->left = y;
@@ -382,7 +551,7 @@ tree_node*	rebalance_erase(const tree_node* z, tree_node& header)
 	else
 	{
 		//	y == z
-		x_par = y->parent;
+		xp = y->parent;
 		if (x) x->parent = y->parent;
 		if (root == z) root = x;
 		else {
@@ -391,76 +560,76 @@ tree_node*	rebalance_erase(const tree_node* z, tree_node& header)
 		}
 
 		if (leftest == z) {
-			if (z->right == 0) leftest = z->parent;
+			if (!z->right) leftest = z->parent;
 			else leftest = tree_node::minimum(x);
 		}
 		if (rightest == z) {
-			if (z->left == 0) rightest = z->parent;
+			if (!z->left) rightest = z->parent;
 			else rightest = tree_node::maximum(x);
 		}
 	}
 
 	if (y->color != RED)
 	{
-		while (x != root && (x == 0 || x->color == BLACK))
+		while (x != root && (!x || x->color == BLACK))
 		{
-			if (x == x_par->left) {
-				tree_node* cur = x_par->right;
+			if (x == xp->left) {
+				tree_node* cur = xp->right;
 				if (cur->color == RED) {	//	#CASE 1
 					cur->color = BLACK;
-					x_par->color = RED;
-					tree_rotate_left(x_par, root);
-					cur = x_par->right;
+					xp->color = RED;
+					tree_rotate_left(xp, root);
+					cur = xp->right;
 				}
 
-				if ((cur->left == 0 || cur->left->color == BLACK) && (cur->right == 0 || cur->right->color == BLACK)) {
+				if ((!cur->left || cur->left->color == BLACK) && (!cur->right || cur->right->color == BLACK)) {
 					cur->color = RED;
-					x = x_par;
-					x_par = x_par->parent;
+					x = xp;
+					xp = xp->parent;
 				}
 				else
 				{
-					if (cur->right == 0 || cur->right->color == BLACK) {	//	#CASE 3
+					if (!cur->right || cur->right->color == BLACK) {	//	#CASE 3
 						cur->left->color = BLACK;
 						cur->color = RED;
 						tree_rotate_right(cur, root);
-						cur = x_par->right;
+						cur = xp->right;
 					}
-					cur->color = x_par->color;								//	#CASE 4
-					x_par->color = BLACK;
+					cur->color = xp->color;								//	#CASE 4
+					xp->color = BLACK;
 					if (cur->right) cur->right->color = BLACK;
-					tree_rotate_left(x_par, root);
+					tree_rotate_left(xp, root);
 					break ;
 				}
 			}
 			else
 			{
 				//	same as above, with right <-> left
-				tree_node*	cur = x_par->left;
+				tree_node*	cur = xp->left;
 				if (cur->color == RED) {                                    //	#CASE 1
 					cur->color = BLACK;
-					x_par->color = RED;
-					tree_rotate_right(x_par, root);
-					cur = x_par->left;
+					xp->color = RED;
+					tree_rotate_right(xp, root);
+					cur = xp->left;
 				}
 
-				if ((cur->right == 0  || cur->right->color == BLACK) && (cur->left == 0 || cur->left->color == BLACK))	{//	#CASE 2
+				if ((!cur->right || cur->right->color == BLACK) && (!cur->left || cur->left->color == BLACK))	{//	#CASE 2
 					cur->color = RED;
-					x = x_par;
-					x_par = x_par->parent;
+					x = xp;
+					xp = xp->parent;
 				}
 				else
 				{
-					if (cur->left == 0 || cur->left->color == BLACK) {	//	#CASE 3
+					if (!cur->left || cur->left->color == BLACK) {	//	#CASE 3
 						cur->right->color = BLACK;
 						cur->color = RED;
 						tree_rotate_left(cur, root);
-						cur = x_par->left;
+						cur = xp->left;
 					}
-					cur->color = x_par->color;								//	#CASE 4
-					x_par->color = BLACK;
+					cur->color = xp->color;								//	#CASE 4
+					xp->color = BLACK;
 					if (cur->left) cur->left->color = BLACK;
-					tree_rotate_right(x_par, root);
+					tree_rotate_right(xp, root);
 					break ;
 				}
 			}
@@ -468,8 +637,8 @@ tree_node*	rebalance_erase(const tree_node* z, tree_node& header)
 		if (x) x->color = BLACK;
 	}
 	return y;
-};
-
+}
+*/
 template<typename K, typename V, typename KV, typename Comp, typename Alloc = std::allocator<V> >
 class RbTree
 {
@@ -490,11 +659,11 @@ public:
 	typedef rb_node*			link_type;
 	typedef const rb_node*		const_link_type;
 	typedef std::size_t			size_type;
-	typedef std:;ptrdiff_t		difference_type;
+	typedef std::ptrdiff_t		difference_type;
 	typedef Alloc				allocator_type;
 
 	node_allocator& get_node_alloc() { return *static_cast<node_allocator*>(&this->impl); }
-	const node_allocator& get_node_alloc() const { return *static_cast<node_allocator*>(&this->impl); }
+	const node_allocator& get_node_alloc() const { return *static_cast<const node_allocator*>(&this->impl); }
 
 	allocator_type get_alloc() const { return allocator_type(get_node_alloc()); }
 
@@ -516,8 +685,7 @@ protected:
 	link_type copy_node(const_link_type target) {
 		link_type dest = create_node(target->value);
 		dest->color = target->color;
-		dest->left = 0;
-		dest->right = 0;
+		dest->left = dest->right = 0;
 		return dest;
 	}
 
@@ -526,7 +694,7 @@ protected:
 		put_node(target);
 	}
 
-	template<typename KeyComp, bool is_pod = std::is_pod<KeyComp>::value>
+	template<typename KeyComp, bool is_pod = ft::is_pod<KeyComp>::value>
 	struct RbTreeImpl : public node_allocator
 	{
 		KeyComp		keyCompare;
@@ -538,8 +706,7 @@ protected:
 		{
 			this->header.color = RED;
 			this->header.parent = 0;
-			this->header.left = &this->header;
-			this->header.right = &this->header;
+			this->header.left = this->header.right = &this->header;
 		}
 	};
 
@@ -555,24 +722,23 @@ protected:
 		{
 			this->header.color = RED;
 			this->header.parent = 0;
-			this->header.left = &this->header;
-			this->header.right = &this->header;
+			this->header.left = this->header.right = &this->header;
 		}
 	};
 	RbTreeImpl<Comp>	impl;
 
 protected:
 	node_ptr& root() { return this->impl.header.parent; }
-	const_node_ptr& root() const { return this->impl.header.parent; }
+	const_node_ptr root() const { return this->impl.header.parent; }
 	node_ptr& get_leftest() { return this->impl.header.left; }
-	const_node_ptr& get_leftest() const { return this->impl.header.left; }
+	const_node_ptr get_leftest() const { return this->impl.header.left; }
 	node_ptr& get_rightest() { return this->impl.header.right; }
-	const_node_ptr& get_rightest() const { return this->impl.header.right; }
+	const_node_ptr get_rightest() const { return this->impl.header.right; }
 
-	link_type begin() { return static_cast<link_type>(this->impl.header.parent); }
-	const_link_type begin() const { return static_cast<const_link_type>(this->impl.header.parent); }
-	link_type end() { return static_cast<link_type>(&this->impl.header); }
-	const_link_type end() const { return static_cast<const_link_type>(&this->impl.header); }
+	link_type ibegin() { return static_cast<link_type>(this->impl.header.parent); }
+	const_link_type ibegin() const { return static_cast<const_link_type>(this->impl.header.parent); }
+	link_type iend() { return static_cast<link_type>(&this->impl.header); }
+	const_link_type iend() const { return static_cast<const_link_type>(&this->impl.header); }
 
 	static const_reference getValue(const_link_type target) { return target->value; }
 	static const_reference getValue(const_node_ptr target) { return static_cast<const_link_type>(target)->value; }
@@ -598,87 +764,87 @@ public:
 	typedef ft::reverse_iterator<const_iterator>	const_reverse_iterator;
 
 private:
-	iterator insert(node_ptr target, node_ptr parent, const value_type& val)
+	iterator minsert(node_ptr x, node_ptr p, const value_type& v)
 	{
-		bool insert_left = (target != 0 || parent == end() || impl.keyCompare(KV()(val), getKey(parent)));
+		bool insert_left = (x || p == iend() || impl.keyCompare(KV()(v), getKey(p)));
 
-		link_type	z = create_node(val);
+		link_type	z = create_node(v);
 
-		insert_rebalance(insert_left, z, parent, impl.header);
+		insert_rebalance(insert_left, z, p, impl.header);
 		++impl.size;
 		return iterator(z);
 	}
-	const_iterator insert(const_node_ptr target, const_node_ptr parent, const value_type& val)
+	const_iterator minsert(const_node_ptr x, const_node_ptr p, const value_type& v)
 	{
-		bool insert_left = (target != 0 || parent == end() || impl.keyCompare(KV()(val), getKey(parent)));
+		bool insert_left = (x || p == iend() || impl.keyCompare(KV()(v), getKey(p)));
 
-		link_type	z = create_node(val);
+		link_type	z = create_node(v);
 
-		insert_rebalance(insert_left, z, const_cast<node_ptr >(parent), impl.header);
+		insert_rebalance(insert_left, z, const_cast<node_ptr>(p), impl.header);
 		++impl.size;
 		return const_iterator(z);
 	}
-	iterator insert_lower(node_ptr target, node_ptr parent, const value_type& val)
+	iterator minsert_lower(node_ptr x, node_ptr p, const value_type& v)
 	{
-		bool insert_left = (target != 0 || parent == end() || !impl.keyCompare(getKey(parent), KV()(val)));
+		bool insert_left = (x || p == iend() || !impl.keyCompare(getKey(p), KV()(v)));
 
-		link_type	z = create_node(val);
+		link_type	z = create_node(v);
 
-		insert_rebalance(insert_left, z, parent, impl.header);
+		insert_rebalance(insert_left, z, p, impl.header);
 		++impl.size;
 		return iterator(z);
 	}
-	link_type copy(const_link_type target, link_type parent)
+	link_type mcopy(const_link_type x, link_type p)
 	{
-		link_type	top = copy_node(target);
-		top->parent = parent;
+		link_type	top = copy_node(x);
+		top->parent = p;
 
 		try {
-			if (target->right) top->right = copy(getRight(target), top);
-			parent = top;
-			target = getLeft(target);
+			if (x->right) top->right = mcopy(getRight(x), top);
+			p = top;
+			x = getLeft(x);
 
-			while (target != 0)
+			while (x)
 			{
-				link_type	y = copy_node(target);
-				parent->left = y;
-				y->parent = parent;
-				if (target->right) y->right = copy(getRight(target), y);
-				parent = y;
-				target = getLeft(target);
+				link_type	y = copy_node(x);
+				p->left = y;
+				y->parent = p;
+				if (x->right) y->right = mcopy(getRight(x), y);
+				p = y;
+				x = getLeft(x);
 			}
 		}
 		catch (...) {
-			erase(top);
+			merase(top);
 			throw ;
 		}
 		 return top;
 	}
 
-	void erase(link_type target)
+	void merase(link_type x)
 	{
-		while (target != 0) {
-			erase(getRight(target));
-			link_type tmp = getLeft(target);
-			destroy_node(target);
-			target = tmp;
+		while (x) {
+			merase(getRight(x));
+			link_type y = getLeft(x);
+			destroy_node(x);
+			x = y;
 		}
 	}
 
 public:
 	RbTree(){};
-	RbTree(const Compare& comp) : impl(allocator_type(), comp) {};
-	RbTree(const Compare& comp, const allocator_type& alloc) : impl(alloc, comp) {};
+	RbTree(const Comp& comp) : impl(allocator_type(), comp) {};
+	RbTree(const Comp& comp, const allocator_type& alloc) : impl(alloc, comp) {};
 	RbTree(const RbTree<K, V, KV, Comp, Alloc>& target) : impl(target.get_node_alloc(), target.impl.keyCompare) {
 		if (target.root() != 0) {
-			root() = copy(target.begin(), end());
+			root() = mcopy(target.ibegin(), iend());
 			get_leftest() = minimum(root());
 			get_rightest() = minimum(root());
 			impl.size = target.impl.size;
 		}
 	}
 
-	~RbTree() { erase(begin()); }
+	~RbTree() { merase(ibegin()); }
 
 	RbTree<K, V, KV, Comp, Alloc>& operator=(const RbTree<K, V, KV, Comp, Alloc>& target)
 	{
@@ -686,7 +852,7 @@ public:
 		clear();
 		impl.keyCompare = target.impl.keyCompare;
 		if (target.root() != 0) {
-			root() = copy(target.begin(), end());
+			root() = mcopy(target.ibegin(), iend());
 			get_leftest() = minimum(root());
 			get_rightest() = maximum(root());
 			impl.size = target.impl.size;
@@ -716,21 +882,23 @@ public:
 			if (other.root() != 0)
 			{
 				root() = other.root();
-				other.root() = 0;
 
 				get_leftest() = other.get_leftest();
 				get_rightest() = other.get_rightest();
-				other.get_leftest() = other.get_rightest() = other.end();
+				root()->parent = iend();
+				other.root() = 0;
+				other.get_leftest() = other.get_rightest() = other.iend();
 			}
 		}
 		else if (other.root() == 0)
 		{
 			other.root() = root();
-			root() = 0;
-
 			other.get_leftest() = get_leftest();
 			other.get_rightest() = get_rightest();
-			get_leftest() = get_rightest() = end();
+			other.root()->parent = other.iend();
+
+			root() = 0;
+			get_leftest() = get_rightest() = iend();
 		}
 		else
 		{
@@ -738,12 +906,12 @@ public:
 			std::swap(get_leftest(), other.get_leftest());
 			std::swap(get_rightest(), other.get_rightest());
 
-			root()->parent = end();
-			other->parent = other.end();
+			root()->parent = iend();
+			other.root()->parent = other.iend();
 		}
 
-		std::swap(this->impl.size, other.impl.size);
-		std::swap(this->impl.keyCompare, other.impl.keyCompare);
+		std::swap(impl.size, other.impl.size);
+		std::swap(impl.keyCompare, other.impl.keyCompare);
 	}
 
 	/**
@@ -752,11 +920,11 @@ public:
 
 	ft::pair<iterator, bool> insert_unique(const value_type& v)
 	{
-		link_type	x = begin();
-		link_type	y = end();
+		link_type	x = ibegin();
+		link_type	y = iend();
 		bool		comp = true;
 
-		while (x != 0)
+		while (x)
 		{
 			y = x;
 			comp = impl.keyCompare(KV()(v), getKey(x));
@@ -764,58 +932,29 @@ public:
 		}
 		iterator	it = iterator(y);
 		if (comp) {
-			if (it == begin()) return pair<iterator, bool>(insert(x, y, v), true);
+			if (it == begin()) return pair<iterator, bool>(minsert(x, y, v), true);
 			else --it;
 		}
-		if (impl.keyCompare(getKey(it.node), KV()(v))) return pair<iterator, bool>(insert(x, y, v), true);
+		if (impl.keyCompare(getKey(it.node), KV()(v))) return pair<iterator, bool>(minsert(x, y, v), true);
 		return pair<iterator, bool>(it, false);
-	}
-
-	iterator insert_equal(const value_type& v)
-	{
-		link_type	x = begin();
-		link_type	y = end();
-		bool		comp = true;
-		while (x != 0)
-		{
-			y = x;
-			comp = impl.keyCompare(KV()(v), getKey(x));
-			x = comp ? getLeft(x) : getRight(x);
-		}
-		return insert(x, y, v);
-	}
-
-	iterator insert_equal_lower(const value_type& v)
-	{
-		link_type	x = begin();
-		link_type	y = end();
-		bool 		comp = true;
-
-		while (x != 0)
-		{
-			y = x;
-			comp = impl.keyCompare(KV()(v), getKey(x));
-			x = !comp ? getLeft(x) : getRight(x);
-		}
-		return insert_lower(x, y, v);
 	}
 
 	iterator insert_unique(iterator pos, const value_type& v)
 	{
-		if (pos.node == end())
+		if (pos.node == iend())
 		{
-			if (!empty() && impl.keyCompare(getKey(get_rightest()), KV()(v))) return insert(0, get_rightest(), v);
+			if (!empty() && impl.keyCompare(getKey(get_rightest()), KV()(v))) return minsert(0, get_rightest(), v);
 			else return insert_unique(v).first;
 		}
 		else if (impl.keyCompare(KV()(v), getKey(pos.node)))
 		{
 			iterator	before = pos;
 
-			if (pos.node == get_leftest()) return insert(get_leftest(), get_leftest(), v);
+			if (pos.node == get_leftest()) return minsert(get_leftest(), get_leftest(), v);
 			else if (impl.keyCompare(getKey((--before).node), KV()(v)))
 			{
-				if (getRight(before.node) == 0) return insert(0, before.node, v);
-				else return insert(pos.node, pos.node, v);
+				if (getRight(before.node) == 0) return minsert(0, before.node, v);
+				else return minsert(pos.node, pos.node, v);
 			}
 			else return insert_unique(v).first;
 		}
@@ -823,11 +962,11 @@ public:
 		{
 			iterator	after = pos;
 
-			if (pos.node == get_rightest()) return insert(0, get_rightest(), v);
+			if (pos.node == get_rightest()) return minsert(0, get_rightest(), v);
 			else if (impl.keyCompare(KV()(v), getKey((++after).node)))
 			{
-				if (getRight(pos.node) == 0) return insert(0, pos.node, v);
-				else return insert(after.node, after.node, v);
+				if (getRight(pos.node) == 0) return minsert(0, pos.node, v);
+				else return minsert(after.node, after.node, v);
 			}
 			else return insert_unique(v).first;
 		}
@@ -836,7 +975,7 @@ public:
 
 	const_iterator insert_unique(const_iterator pos, const value_type& v)
 	{
-		if (pos.node ==end())
+		if (pos.node == end())
 		{
 			if (!empty() && impl.keyCompare(getKey(get_rightest()), KV()(v))) return insert(0, get_rightest(), v);
 			else return const_iterator(insert_unique(v).first);
@@ -868,33 +1007,63 @@ public:
 		else return pos;
 	}
 
+	iterator insert_equal(const value_type& v)
+	{
+		link_type	x = ibegin();
+		link_type	y = iend();
+		bool		comp;
+		while (x)
+		{
+			y = x;
+			comp = impl.keyCompare(KV()(v), getKey(x));
+			x = comp ? getLeft(x) : getRight(x);
+		}
+		return minsert(x, y, v);
+	}
+
+	iterator insert_equal_lower(const value_type& v)
+	{
+		link_type	x = ibegin();
+		link_type	y = iend();
+		bool 		comp;
+
+		while (x)
+		{
+			y = x;
+			comp = !impl.keyCompare(getKey(x), KV()(v));
+			x = comp ? getLeft(x) : getRight(x);
+		}
+		return minsert_lower(x, y, v);
+	}
+
+
 	iterator insert_equal(iterator pos, const value_type& v)
 	{
-		if (pos.node == end())
+		if (pos.node == iend())
 		{
-			if (!empty() && impl.keyCompare(KV()(v)), getKey(get_rightest())) return insert(0, get_rightest(), v);
+			if (!empty() && impl.keyCompare(KV()(v)), getKey(get_rightest())) return minsert(0, get_rightest(), v);
 			else return insert_unique(v);
 		}
 		else if (!impl.keyCompare(getKey(pos.node), KV()(v)))
 		{
 			iterator	before = pos;
 
-			if (pos.node == get_leftest()) return insert(get_leftest(), get_leftest(), v);
+			if (pos.node == get_leftest()) return minsert(get_leftest(), get_leftest(), v);
 			else if (!impl.keyCompare(KV()(v), getKey((--before).node)))
 			{
-				if (getRight(before.node) == 0) return insert(0, before.node, v);
-				else return insert(pos.node, pos.node, v);
+				if (getRight(before.node) == 0) return minsert(0, before.node, v);
+				else return minsert(pos.node, pos.node, v);
 			}
 			else return insert_unique(v);
 		}
 		else
 		{
 			iterator	after = pos;
-			if (pos.node == get_rightest()) return insert(0, get_rightest(), v);
+			if (pos.node == get_rightest()) return minsert(0, get_rightest(), v);
 			else if (!impl.keyCompare(getKey((++after).node)), KV()(v))
 			{
-				if (getRight(pos.node) == 0) return insert(0, pos.node, v);
-				else return insert(after.node, after.node, v);
+				if (getRight(pos.node) == 0) return minsert(0, pos.node, v);
+				else return minsert(after.node, after.node, v);
 			}
 			else return insert_equal_lower(v);
 		}
@@ -902,30 +1071,30 @@ public:
 
 	const_iterator insert_equal(const_iterator pos, const value_type& v)
 	{
-		if (pos.node == end())
+		if (pos.node == iend())
 		{
-			if (!empty() && !impl.keyCompare(KV()(v)), getKey(get_rightest())) return insert(0, get_rightest(), v);
+			if (!empty() && !impl.keyCompare(KV()(v)), getKey(get_rightest())) return minsert(0, get_rightest(), v);
 			else return const_iterator(insert_unique(v));
 		}
 		else if (!impl.keyCompare(getKey(pos.node), KV()(v)))
 		{
 			const_iterator	before = pos;
-			if (pos.node == get_leftest()) return insert(get_leftest(), get_leftest(), v);
+			if (pos.node == get_leftest()) return minsert(get_leftest(), get_leftest(), v);
 			else if (!impl.keyCompare(KV()(v), getKey((--before).node)))
 			{
-				if (getRight(before.node) == 0) return insert(0, before.node, v);
-				else return insert(pos.node, pos.node, v);
+				if (getRight(before.node) == 0) return minsert(0, before.node, v);
+				else return minsert(pos.node, pos.node, v);
 			}
 			else return const_iterator(insert_unique(v));
 		}
 		else
 		{
 			const_iterator	after = pos;
-			if (pos.node == get_rightest()) return insert(0, get_rightest(), v);
+			if (pos.node == get_rightest()) return minsert(0, get_rightest(), v);
 			else if (!impl.keyCompare(getKey((++after).node)), KV()(v))
 			{
-				if (getRight(pos.node) == 0) return insert(0, pos.node, v);
-				else return insert(after.node, after.node, v);
+				if (getRight(pos.node) == 0) return minsert(0, pos.node, v);
+				else return minsert(after.node, after.node, v);
 			}
 			else return const_iterator(insert_equal_lower(v));
 		}
@@ -959,22 +1128,22 @@ public:
 
 	size_type erase(const key_type& x)
 	{
-		pair<iterator, iterator>	pitit = equal_range(x);
-		const size_type	presize = size();
-		erase(pitit.first, pitit.second);
-		return presize - size();
+		pair<iterator, iterator>	p = equal_range(x);
+		const size_type	psize = size();
+		erase(p.first, p.second);
+		return psize - size();
 	}
 
 	void erase(iterator first, iterator last)
 	{
 		if (first == begin() && last == end()) clear();
-		else for (; first != last; ++first) erase(*first);
+		else for (; first != last; ++first) erase(first);
 	}
 
 	void erase(const_iterator first, const_iterator last)
 	{
 		if (first == begin() && last == end()) clear();
-		else for (; first != last; ++first) erase(*first);
+		else for (; first != last; ++first) erase(first);
 	}
 
 	void erase(const key_type* first, const key_type* last)
@@ -984,18 +1153,19 @@ public:
 
 	void clear()
 	{
-		erase(begin());
+		merase(ibegin());
+		get_leftest() = iend();
 		root() = 0;
-		get_leftest() = get_rightest() = end();
+		get_rightest() = iend();
 		impl.size = 0;
 	}
 
 	iterator find(const key_type& k)
 	{
-		link_type	x = begin();
-		link_type	y = end();
+		link_type	x = ibegin();
+		link_type	y = iend();
 
-		for (; x != 0;)
+		while(x)
 		{
 			if (!impl.keyCompare(getKey(x), k))
 			{
@@ -1010,10 +1180,10 @@ public:
 
 	const_iterator find(const key_type& k) const
 	{
-		const_link_type	x = begin();
-		const_link_type	y = begin();
+		const_link_type	x = ibegin();
+		const_link_type	y = iend();
 
-		for (; x != 0;)
+		while(x)
 		{
 			if (!impl.keyCompare(getKey(x), k))
 			{
@@ -1029,15 +1199,16 @@ public:
 	size_type count(const key_type& k) const
 	{
 		pair<const_iterator, const_iterator> pitit = equal_range(k);
-		return std::distance(pitit.first, pitit.second);
+		const size_type ret = std::distance(pitit.first, pitit.second);
+		return ret;
 	}
 
 	iterator lower_bound(const key_type& k)
 	{
-		link_type	x = begin();
-		link_type	y = end();
+		link_type	x = ibegin();
+		link_type	y = iend();
 
-		for (; x != 0;)
+		while(x)
 		{
 			if (!impl.keyCompare(getKey(x), k))
 			{
@@ -1049,14 +1220,14 @@ public:
 		return iterator(y);
 	}
 
-	const_iterator lower_bound(const key_type& k)
+	const_iterator lower_bound(const key_type& k) const
 	{
-		link_type	x = begin();
-		link_type	y = end();
+		const_link_type	x = ibegin();
+		const_link_type	y = iend();
 
-		for (; x != 0;)
+		while(x)
 		{
-			if (impl.keyCompare(getKey(x), k))
+			if (!impl.keyCompare(getKey(x), k))
 			{
 				y = x;
 				x = getLeft(x);
@@ -1068,10 +1239,10 @@ public:
 
 	iterator upper_bound(const key_type& k)
 	{
-		link_type	x = begin();
-		link_type	y = end();
+		link_type	x = ibegin();
+		link_type	y = iend();
 
-		for (; x != 0;)
+		while (x)
 		{
 			if (impl.keyCompare(k, getKey(x)))
 			{
@@ -1085,10 +1256,10 @@ public:
 
 	const_iterator upper_bound(const key_type& k) const
 	{
-		const_link_type	x = begin();
-		const_link_type	y = end();
+		const_link_type	x = ibegin();
+		const_link_type	y = iend();
 
-		for (; x != 0;)
+		while (x)
 		{
 			if (impl.keyCompare(k, getKey(x)))
 			{
@@ -1099,10 +1270,12 @@ public:
 		}
 		return const_iterator(y);
 	}
-
-	pair<iterator, iterator> equal_range(const key_type& k)
+	pair<iterator, iterator>
+	equal_range(const key_type& k)
 	{ return pair<iterator, iterator>(lower_bound(k), upper_bound(k)); }
-	pair<const_iterator, const_iterator> equal_range(const key_type& k)
+
+	pair<const_iterator, const_iterator>
+	equal_range(const key_type& k) const
 	{ return pair<const_iterator, const_iterator>(lower_bound(k), upper_bound(k)); }
 };
 
@@ -1139,7 +1312,7 @@ bool operator>=(const RbTree<K, V, KV, Comp, Alloc>& lhs,
 template <typename K, typename V, typename KV, typename Comp, typename Alloc>
 void swap(const RbTree<K, V, KV, Comp, Alloc>& lhs,
 		  const RbTree<K, V, KV, Comp, Alloc>& rhs)
-{ return lhs.swap(rhs); }
+{ lhs.swap(rhs); }
 
 }   //  FT
 

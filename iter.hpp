@@ -1,10 +1,11 @@
 #ifndef ITER_HPP
 # define ITER_HPP
 
-#include "helper.hpp"
 #include "traits.hpp"
 #include "iterator.hpp"
-#include <iterator>
+
+#include <limits>
+//#include <iterator>
 
 namespace ft
 {
@@ -14,15 +15,14 @@ class random_access_iterator
 : public iterator<std::random_access_iterator_tag, T>
 {
 public:
-	typedef T*																iterator_type;
-	typedef typename ft::iterator_traits<iterator_type>::value_type			value_type;
-	typedef typename ft::iterator_traits<iterator_type>::difference_type	difference_type;
-	typedef typename ft::iterator_traits<iterator_type>::pointer			pointer;
-	typedef typename ft::iterator_traits<iterator_type>::reference			reference;
+	typedef T*															iterator_type;
+	typedef typename iterator_traits<iterator_type>::value_type			value_type;
+	typedef typename iterator_traits<iterator_type>::difference_type	difference_type;
+	typedef typename iterator_traits<iterator_type>::pointer			pointer;
+	typedef typename iterator_traits<iterator_type>::reference			reference;
 
-	//random_access_iterator(pointer ptr = ft::_nullptr) : cur(ptr) {};
+	random_access_iterator() : cur(pointer()) {};
 	random_access_iterator(pointer ptr) : cur(ptr) {};
-	random_access_iterator() : cur(T()) {};
 	template<typename U>
 	random_access_iterator(const random_access_iterator<U>& ref) : cur(ref.base()) {};
 	~random_access_iterator(void) {};
@@ -118,15 +118,19 @@ protected:
  * 	Reverse Iterator
  */
 template <typename Iterator>
-class reverse_iterator
+class reverse_iterator: public std::iterator<typename ft::iterator_traits<Iterator>::iterator_category,
+		typename ft::iterator_traits<Iterator>::value_type,
+		typename ft::iterator_traits<Iterator>::difference_type,
+		typename ft::iterator_traits<Iterator>::pointer,
+		typename ft::iterator_traits<Iterator>::reference>
 {
 public:
-	typedef Iterator														iterator_type;
-	typedef typename ft::iterator_traits<iterator_type>::difference_type	difference_type;
-	typedef typename ft::iterator_traits<iterator_type>::value_type			value_type;
-	typedef typename ft::iterator_traits<iterator_type>::pointer			pointer;
-	typedef typename ft::iterator_traits<iterator_type>::reference			reference;
-	typedef typename ft::iterator_traits<iterator_type>::iterator_category	iterator_category;
+	typedef Iterator													iterator_type;
+	typedef typename iterator_traits<iterator_type>::difference_type	difference_type;
+	typedef typename iterator_traits<iterator_type>::value_type			value_type;
+	typedef typename iterator_traits<iterator_type>::pointer			pointer;
+	typedef typename iterator_traits<iterator_type>::reference			reference;
+	typedef typename iterator_traits<iterator_type>::iterator_category	iterator_category;
 
 public:
 	reverse_iterator(void) : cur(iterator_type()){};
@@ -178,13 +182,13 @@ public:
 
 	//	Access
 	reference operator*(void) const {
-		//iterator_type	tmp(cur);
-		return *(cur - 1);
+		iterator_type	tmp(cur);
+		return *--tmp;
 	}
 	pointer operator->(void) const { return &operator*(); }
 	reference operator[](difference_type n) const { return *(*this + n); };
-	
-	private:
+
+protected:
 	iterator_type	cur;
 };
 
@@ -227,4 +231,4 @@ public:
 			return rhs.base() - lhs.base();
 		}
 }	//	FT
-#endif //   ITERATOR_HPP
+#endif //   ITER_HPP

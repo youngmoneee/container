@@ -1,6 +1,8 @@
 #ifndef ALGORITHM_HPP
 # define ALGORITHM_HPP
 
+#include <functional>
+
 namespace ft
 {
 template<typename Iter1, typename Iter2>
@@ -49,14 +51,14 @@ struct greater : std::binary_function<T, T, bool>
 		return lhs > rhs;
 	}
 };
-
+/*
 template<typename T>
 void	swap(T& lhs, T& rhs) {
 	T	C = lhs;
 	lhs = rhs;
 	rhs = C;
 }
-
+*/
 template<typename InputIt, typename OutputIt>
 OutputIt copy(InputIt first, InputIt last, OutputIt d_first) {
 	for (; first != last; (void)++first, (void)++d_first) *d_first = *first;
@@ -67,7 +69,14 @@ template<typename InputIt, typename OutputIt>
 OutputIt copy_backward(InputIt first, InputIt last, OutputIt d_last) {
 	for (; first != last; ) *(--d_last) = *(--last);
 	return d_last;
-}
+};
+
+template<typename Pair>
+struct Select1st : public std::unary_function<Pair, typename Pair::first_type>
+{
+	typename Pair::first_type& operator()(Pair& x) const { return x.first; }
+	const typename Pair::first_type& operator()(const Pair& x) const { return x.first; }
+};
 
 }
 

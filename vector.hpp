@@ -4,7 +4,6 @@
 #include <iostream>
 #include "iter.hpp"
 #include "iterator.hpp"
-#include "helper.hpp"
 #include "traits.hpp"
 #include "algorithm.hpp"
 #include <memory>
@@ -76,9 +75,9 @@ private:	//	Function
 public:		//	Cannonical
 	explicit vector(const allocator_type& alloc = allocator_type())
 		: _alloc_(alloc),
-		_begin_(_nullptr),
-		_end_(_nullptr),
-		_cap_(_nullptr) {};
+		_begin_(0),
+		_end_(0),
+		_cap_(0) {};
 
 	explicit vector(size_type n,
 				const value_type& type = value_type(),
@@ -102,7 +101,7 @@ public:		//	Cannonical
 	vector(InputIterator first,
 		InputIterator last,
 		const allocator_type& alloc = allocator_type(),
-		typename enable_if<!ft::is_integral<InputIterator>::value>::type* = ft::_nullptr)
+		typename enable_if<!ft::is_integral<InputIterator>::value>::type* = 0)
 		: _alloc_(alloc) {
 			size_type n = ft::difference(first, last);
 			_init(n);
@@ -111,7 +110,7 @@ public:		//	Cannonical
 		}
 
 	~vector(void) {
-		if (_begin_ == ft::_nullptr) return ;
+		if (_begin_ == 0) return ;
 		size_type pre_cap = capacity();
 		_destruct(_begin_);
 		_alloc_.deallocate(_begin_, pre_cap);
@@ -165,7 +164,7 @@ public:		//	Cannonical
 	}
 
 	template<typename Iter>
-	void assign(Iter first, Iter last, typename enable_if<!ft::is_integral<Iter>::value>::type* = ft::_nullptr) {
+	void assign(Iter first, Iter last, typename enable_if<!ft::is_integral<Iter>::value>::type* = 0) {
     	size_type n = ft::difference(first, last);
 		if (capacity() < n) reserve(n);
 		ft::copy(first, last, _begin_);
@@ -209,7 +208,7 @@ public:		//	Cannonical
 		size_type iter_diff = ft::difference(first, last);
 		size_type len = ft::difference(begin(), pos);
 
-		if (iter_diff > max_size()) throw bad_alloc();
+		if (iter_diff > max_size()) throw std::bad_alloc();
 		if (capacity() < size() + iter_diff) reserve(size() + iter_diff);
 
 		pointer ptr = _begin_ + len;
@@ -309,12 +308,12 @@ template<typename T, typename _Alloc>
 bool operator>=(const ft::vector<T, _Alloc>& lhs, const ft::vector<T, _Alloc>& rhs) {
 	return lhs == rhs || lhs > rhs;
 }
-
+/*
 template<typename T, typename _Alloc>
 void swap(vector<T, _Alloc>& lhs, vector<T, _Alloc>& rhs) {
 	lhs.swap(rhs);
 }
-
+*/
 }	// FT
 
 namespace std {

@@ -1,7 +1,9 @@
 #ifndef TRAITS_HPP
 # define TRAITS_HPP
 
-#include "iter.hpp"
+//#include "iter.hpp"
+#include <limits>
+#include <iterator>
 
 namespace ft
 {
@@ -74,6 +76,60 @@ struct	enable_if {};
 
 template <typename T>
 struct	enable_if<true, T> { typedef T	type; };
+
+
+template <typename T>
+struct is_pod : public ft::integral_constant<bool, __is_pod(T)> {};
+
+/*
+ *	Iter Traits
+ */
+template<typename Iterator>
+struct	iterator_traits
+{
+	typedef	typename	Iterator::difference_type	difference_type;
+	typedef	typename	Iterator::value_type		value_type;
+	typedef	typename	Iterator::pointer			pointer;
+	typedef	typename	Iterator::reference			reference;
+	typedef	typename	Iterator::iterator_category	iterator_category;
+};
+
+
+template<typename T>
+struct	iterator_traits< T* >
+{
+	typedef	std::ptrdiff_t							difference_type;
+	typedef	T										value_type;
+	typedef	T*										pointer;
+	typedef	T&										reference;
+	typedef	std::random_access_iterator_tag			iterator_category;
+};
+
+template <typename T>
+struct	iterator_traits< const T* >
+{
+	typedef	std::ptrdiff_t							difference_type;
+	typedef	T										value_type;
+	typedef	const T*								pointer;
+	typedef	const T&								reference;
+	typedef	std::random_access_iterator_tag			iterator_category;
+};
+/*
+template <typename Iter>
+typename std::iterator_traits<Iter>::iterator_category
+iterator_category(const Iter&)
+{ return typename ft::iterator_traits<Iter>::iterator_category(); }
+*/
+
+template < class InputIterator >
+typename ft::iterator_traits< InputIterator >::difference_type difference(
+		InputIterator first, InputIterator last) {
+	typedef
+	typename ft::iterator_traits<InputIterator>::difference_type size_type;
+	size_type n = 0;
+	for (; first != last; ++first) ++n;
+	return n;
+}
 
 }		//	FT
 #endif  //  TRAITS_HPP
