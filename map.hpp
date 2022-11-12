@@ -164,8 +164,6 @@ template<typename FK, typename FT, typename FComp, typename FAlloc>
 void swap(const map<FK, FT, FComp, FAlloc>& lhs, const map<FK, FT, FComp, FAlloc>& rhs)
 { lhs.swap(rhs); }
 
-}
-
-
+}	//	FT
 
 #endif

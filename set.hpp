@@ -57,8 +57,8 @@ public:
 
 	iterator begin() const { return rep.begin(); }
 	iterator end() const { return rep.end(); }
-	reverse_iterator rbegin() const { return rep.rbegin(); }
-	reverse_iterator rend() const { return rep.rend(); }
+	reverse_iterator rbegin() const { return reverse_iterator(end()); }
+	reverse_iterator rend() const { return reverse_iterator(begin()); }
 
 	bool empty() const { return rep.empty(); };
 	size_type size() const { return rep.size(); }

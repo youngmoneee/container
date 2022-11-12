@@ -81,6 +81,6 @@ struct Identity : public std::unary_function<T, T>
 template <typename T>
 struct Identity <const T> : Identity<T> {};
 
-}
+}	//	FT
 
 #endif

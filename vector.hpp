@@ -193,20 +193,6 @@ public:		//	Cannonical
 		ft::copy_backward(ptr, _end_ - n, _end_);
 		for (size_type i = 0; i < n; ++i) ptr[i] = value;
 	}
-/*
-	template<typename Iter>
-	void insert(iterator pos, Iter first, Iter last, typename enable_if<!ft::is_integral<Iter>::value>::type* = NULL) {
-		size_type iter_diff = ft::difference(first, last);
-		size_type len = ft::difference(begin(), pos);
-
-		if (iter_diff > max_size()) throw std::bad_alloc();
-		if (capacity() < size() + iter_diff) reserve(size() + iter_diff);
-		pointer ptr = _begin_ + len;
-		_construct(iter_diff);
-		ft::copy_backward(ptr, _end_ - iter_diff, _end_);
-		ft::copy(first, last, begin() + len);
-	}
-*/
 
 	template <class Iter>
 	void insert (iterator pos, Iter first, Iter last, typename ft::enable_if<!is_integral<Iter>::value>::type* = NULL)
@@ -351,12 +337,7 @@ template<typename T, typename _Alloc>
 bool operator>=(const ft::vector<T, _Alloc>& lhs, const ft::vector<T, _Alloc>& rhs) {
 	return lhs == rhs || lhs > rhs;
 }
-/*
-template<typename T, typename _Alloc>
-void swap(vector<T, _Alloc>& lhs, vector<T, _Alloc>& rhs) {
-	lhs.swap(rhs);
-}
-*/
+
 }	// FT
 
 namespace std {
