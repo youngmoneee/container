@@ -1,10 +1,6 @@
 #ifndef SET_HPP
 # define SET_HPP
 
-#include <memory>
-#include <functional>
-
-#include "algorithm.hpp"
 #include "rbtree.hpp"
 
 namespace ft
@@ -41,7 +37,7 @@ public:
 	typedef typename rep_type::difference_type			difference_type;
 
 	set() : rep(Comp(), Alloc()) {}
-	explicit set(const Comp& comp, const allocator_type& alloc) : rep(comp, alloc) {}
+	explicit set(const Comp& comp, const allocator_type& alloc = allocator_type()) : rep(comp, alloc) {}
 	template <typename Iter>
 	set(Iter first, Iter last) : rep(Comp(), allocator_type())
 	{ rep.insert_unique(first, last); }
@@ -61,7 +57,6 @@ public:
 
 	iterator begin() const { return rep.begin(); }
 	iterator end() const { return rep.end(); }
-
 	reverse_iterator rbegin() const { return rep.rbegin(); }
 	reverse_iterator rend() const { return rep.rend(); }
 

@@ -7,7 +7,6 @@
 # include "algorithm.hpp"
 
 # include <memory>
-//# include <algorithm>
 
 namespace ft
 {
@@ -327,9 +326,7 @@ void insert_rebalance(const bool insert_left, tree_node* target, tree_node* pare
 	 root->color = BLACK;
 }
 
-tree_node*
-rebalance_erase(tree_node* const z,
-							tree_node& header)
+tree_node* rebalance_erase(tree_node* const z, tree_node& header)
 {
 	tree_node*& root = header.parent;
 	tree_node*& leftmost = header.left;
@@ -501,144 +498,7 @@ rebalance_erase(tree_node* const z,
 	}
 	return y;
 }
-/*
-tree_node*	rebalance_erase(tree_node* const z, tree_node& header)
-{
-	tree_node*&		root = header.parent;
-	tree_node*&		leftest = header.left;
-	tree_node*&		rightest = header.right;
-	tree_node*		x;
-	tree_node*		xp;
-	tree_node*		y = z;
 
-
-	if (!y->left)
-		x = y->right;
-	else
-	{
-		if (!y->right)
-			x = y->left;
-		else
-		{
-			y = y->right;
-			while (y->left) y = y->left;
-			x = y->right;
-		}
-	}
-
-	if (y != z)
-	{
-		//	relink y in place of z. y is z's successor
-		z->left->parent = y;
-		y->left = z->left;
-		if (y != z->right)
-		{
-			xp = y->parent;
-			if (x) x->parent = y->parent;
-			y->parent->left = x;
-			y->right = z->right;
-			z->right->parent = y;
-		}
-		else xp = y;
-
-		if (root == z) root = y;
-		else if (z->parent->left == z) z->parent->left = y;
-		else z->parent->right = y;
-		y->parent = z->parent;
-		std::swap(y->color, z->color);
-		y = z;
-	}
-	else
-	{
-		//	y == z
-		xp = y->parent;
-		if (x) x->parent = y->parent;
-		if (root == z) root = x;
-		else {
-			if(z->parent->left == z) z->parent->left = x;
-			else z->parent->right = x;
-		}
-
-		if (leftest == z) {
-			if (!z->right) leftest = z->parent;
-			else leftest = tree_node::minimum(x);
-		}
-		if (rightest == z) {
-			if (!z->left) rightest = z->parent;
-			else rightest = tree_node::maximum(x);
-		}
-	}
-
-	if (y->color != RED)
-	{
-		while (x != root && (!x || x->color == BLACK))
-		{
-			if (x == xp->left) {
-				tree_node* cur = xp->right;
-				if (cur->color == RED) {	//	#CASE 1
-					cur->color = BLACK;
-					xp->color = RED;
-					tree_rotate_left(xp, root);
-					cur = xp->right;
-				}
-
-				if ((!cur->left || cur->left->color == BLACK) && (!cur->right || cur->right->color == BLACK)) {
-					cur->color = RED;
-					x = xp;
-					xp = xp->parent;
-				}
-				else
-				{
-					if (!cur->right || cur->right->color == BLACK) {	//	#CASE 3
-						cur->left->color = BLACK;
-						cur->color = RED;
-						tree_rotate_right(cur, root);
-						cur = xp->right;
-					}
-					cur->color = xp->color;								//	#CASE 4
-					xp->color = BLACK;
-					if (cur->right) cur->right->color = BLACK;
-					tree_rotate_left(xp, root);
-					break ;
-				}
-			}
-			else
-			{
-				//	same as above, with right <-> left
-				tree_node*	cur = xp->left;
-				if (cur->color == RED) {                                    //	#CASE 1
-					cur->color = BLACK;
-					xp->color = RED;
-					tree_rotate_right(xp, root);
-					cur = xp->left;
-				}
-
-				if ((!cur->right || cur->right->color == BLACK) && (!cur->left || cur->left->color == BLACK))	{//	#CASE 2
-					cur->color = RED;
-					x = xp;
-					xp = xp->parent;
-				}
-				else
-				{
-					if (!cur->left || cur->left->color == BLACK) {	//	#CASE 3
-						cur->right->color = BLACK;
-						cur->color = RED;
-						tree_rotate_left(cur, root);
-						cur = xp->left;
-					}
-					cur->color = xp->color;								//	#CASE 4
-					xp->color = BLACK;
-					if (cur->left) cur->left->color = BLACK;
-					tree_rotate_right(xp, root);
-					break ;
-				}
-			}
-		}
-		if (x) x->color = BLACK;
-	}
-	return y;
-}
-*/
 template<typename K, typename V, typename KV, typename Comp, typename Alloc = std::allocator<V> >
 class RbTree
 {

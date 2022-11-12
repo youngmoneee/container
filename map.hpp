@@ -1,11 +1,6 @@
 #ifndef MAP_HPP
 # define MAP_HPP
 
-#include <memory>
-
-#include "algorithm.hpp"
-#include "pair.hpp"
-#include "iter.hpp"
 #include "rbtree.hpp"
 
 namespace ft

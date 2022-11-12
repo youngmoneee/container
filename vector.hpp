@@ -1,11 +1,9 @@
 #ifndef VECTOR_HPP
 # define VECTOR_HPP
 
-#include <iostream>
 #include "iter.hpp"
-#include "iterator.hpp"
-#include "traits.hpp"
 #include "algorithm.hpp"
+
 #include <memory>
 #include <algorithm>
 #include <stdexcept>
