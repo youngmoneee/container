@@ -195,9 +195,9 @@ public:		//	Cannonical
 		ft::copy_backward(ptr, _end_ - n, _end_);
 		for (size_type i = 0; i < n; ++i) ptr[i] = value;
 	}
-
+/*
 	template<typename Iter>
-	void insert(iterator pos, Iter first, Iter last, typename enable_if<!ft::is_integral<Iter>::value>::type* = nullptr) {
+	void insert(iterator pos, Iter first, Iter last, typename enable_if<!ft::is_integral<Iter>::value>::type* = NULL) {
 		size_type iter_diff = ft::difference(first, last);
 		size_type len = ft::difference(begin(), pos);
 
@@ -207,6 +207,59 @@ public:		//	Cannonical
 		_construct(iter_diff);
 		ft::copy_backward(ptr, _end_ - iter_diff, _end_);
 		ft::copy(first, last, begin() + len);
+	}
+*/
+
+	template <class Iter>
+	void insert (iterator pos, Iter first, Iter last, typename ft::enable_if<!is_integral<Iter>::value>::type* = NULL)
+	{
+		difference_type n = std::distance(first, last);
+		iterator pbegin, pend;
+		pointer newStorage;
+		size_type newCap;
+		size_type i;
+		size_type _size = size();
+		size_type _cap = capacity();
+
+		pbegin = this->begin();
+		pend = this->end();
+		if (_size + n > _cap)
+		{
+			try
+			{
+				newCap = _size + n > _cap * 2 ? _size + n : _cap * 2;
+				newStorage = _alloc_.allocate(newCap);
+				for (i = 0; pbegin != pos; i++, pbegin++)
+					_alloc_.construct(&newStorage[i], *pbegin);
+				for (; first != last; i++, first++)
+					_alloc_.construct(&newStorage[i], *first);
+				for (; pbegin != pend; i++, pbegin++)
+					_alloc_.construct(&newStorage[i], *pbegin);
+			}
+			catch (...)
+			{
+				for (size_type j = 0; j < i; j++)
+					_alloc_.destroy(&newStorage[j]);
+				_alloc_.deallocate(newStorage, newCap);
+				throw ;
+			}
+			this->clear();
+			if (_cap)
+				_alloc_.deallocate(_begin_, _cap);
+			_begin_ = newStorage;
+			_cap_ = _begin_ + newCap;
+			_size = i;
+			_end_ = &newStorage[_size];
+		}
+		else
+		{
+			iterator tmp = pos;
+			for (size_type i = 1; tmp != pend; i++, tmp++)
+				*(pend + n - i) = *(pend - i);
+			for (; first != last; first++, pos++)
+				_alloc_.construct(&*pos, *first);
+			_end_ += n;
+		}
 	}
 
 	iterator erase(iterator pos) {
